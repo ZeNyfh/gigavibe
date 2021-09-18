@@ -184,12 +184,14 @@ discord command queue:
 			clear queue of event-guild
 			clear {track::*}
 			set {track::*} to 0
+			exit
 
 discord command reload:
 	prefixes: $
 	trigger:
 		reply with "Successfully reloaded b.sk"
 		execute console command "skript reload b"
+		exit
 
 discord command help:
 	prefixes: $
@@ -227,6 +229,11 @@ discord command fixtts:
 	trigger:
 		clear {check}
 		reply with "ok, fixed that"
+		exit
+
+on load:
+	clear {check}
+	exit
 
 discord command tts <text>:
 	prefixes: $
@@ -267,6 +274,7 @@ discord command tts <text>:
 				else:
 					connect event-bot to voice channel of event-member
 					play {_fuckyou} in event-guild
+					wait 1 second
 					delete file "plugins/TTS.mp3"
 					clear {_fuckyou}
 					clear {_test}
@@ -278,6 +286,7 @@ discord command queuedebug:
 	prefixes: $
 	trigger:
 		set {_tracks::*} to {_queue::*}
+		exit
 
 on track end seen by "Gigavibe":
 	skip track of event-guild
@@ -302,9 +311,11 @@ discord command ping:
 		delete discord entity {_temp}
 		subtract {_unixtime} from {_unixtime2}
 		reply with "ping: %{_unixtime2}*1000%ms"
+		exit
 
 command /startb:
 	trigger:
 		set {token} to "ODc5NTI3Mzg5NzExOTkwNzg1.YSRBtg.D8MXrkTB61EZxENa_TUFHzM8-9o"
 		login to "ODc5NTI3Mzg5NzExOTkwNzg1.YSRBtg.D8MXrkTB61EZxENa_TUFHzM8-9o" with name "Gigavibe"
 		execute console command "save-all"
+		exit
