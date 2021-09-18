@@ -264,7 +264,7 @@ discord command tts <text>:
 			else:
 				set line 1 in file "plugins/PyTTS.py" to "text = ""%event-member% says, %arg-1%""" # replace VBS with python for linux compatibility
 				run batch cmd "C:\Users\david\Desktop\code_stuff\discordbot\plugins\a.bat"
-				wait 2 second
+				wait 1 second
 				load locale track from "plugins/TTS.mp3" and store it in {_fuckyou}
 				set {_vc} to voice channel of event-member
 				if {_vc} is not set:
@@ -274,6 +274,7 @@ discord command tts <text>:
 				else:
 					connect event-bot to voice channel of event-member
 					play {_fuckyou} in event-guild
+					wait 1 second
 					delete file "plugins/TTS.mp3"
 					clear {_fuckyou}
 					clear {_test}
