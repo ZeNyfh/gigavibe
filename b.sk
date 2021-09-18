@@ -219,7 +219,7 @@ discord command help:
 								set description of embed to join {_helplist2::*} with nl
 								set title of embed to "`📖 Help`"
 							reply with last embed
-							exit # this was a fever dream but i cannot think of another way to do it
+							exit # this does not work currently
 						
 discord command fixtts:
 	prefixes: $
