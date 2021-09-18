@@ -1,4 +1,4 @@
-discord command soundcloud [<string>]:
+discord command soundcloud [<string>]: # this does not work for some reason
 	prefixes: $
 	aliases: sc
 	trigger:
