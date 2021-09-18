@@ -255,10 +255,10 @@ discord command tts <text>:
 				clear {check}
 				exit
 			else:
-				set line 13 in file "plugins/temp.vbs" to "oVoice.Speak ""%event-member% says, %arg-1%""" # replace VBS with python for linux compatibility
+				set line 1 in file "plugins/PyTTS.py" to "text = ""%event-member% says, %arg-1%""" # replace VBS with python for linux compatibility
 				run batch cmd "C:\Users\david\Desktop\code_stuff\discordbot\plugins\a.bat"
 				wait 1 second
-				load locale track from "plugins/Sample.wav" and store it in {_fuckyou}
+				load locale track from "plugins/TTS.mp3" and store it in {_fuckyou}
 				set {_vc} to voice channel of event-member
 				if {_vc} is not set:
 					reply with "get in a voice channel before using tts."

@@ -1,1 +1,1 @@
-start C:\Users\david\Desktop\code_stuff\discordbot\plugins\temp.vbs
+start PyTTS.py
