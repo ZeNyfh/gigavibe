@@ -1,4 +1,3 @@
-# test
 discord command soundcloud [<string>]:
 	prefixes: $
 	aliases: sc
