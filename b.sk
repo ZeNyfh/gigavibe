@@ -1,5 +1,5 @@
 discord command soundcloud [<string>]: # this does not work for some reason
-	prefixes: $
+	prefixes: !
 	aliases: sc
 	trigger:
 		if arg 1 is not set:
@@ -36,7 +36,7 @@ discord command soundcloud [<string>]: # this does not work for some reason
 			exit
 
 discord command play [<string>]:
-	prefixes: $
+	prefixes: !
 	aliases: p
 	trigger:
 		if arg 1 is not set:
@@ -74,7 +74,7 @@ discord command play [<string>]:
 
 discord command np:
 	aliases: nowplaying
-	prefixes: $
+	prefixes: !
 	executable in: guild
 	trigger:
 		if {track::1} is not set:
@@ -100,7 +100,7 @@ discord command np:
 
 discord command forceskip:
 	aliases: fs
-	prefixes: $
+	prefixes: !
 	executable in: guild
 	trigger:
 		if voice channel of event-bot in event-guild is not set:
@@ -127,7 +127,7 @@ discord command forceskip:
 			exit
 
 discord command leave:
-	prefixes: $
+	prefixes: !
 	executable in: guild
 	trigger:
 		if event-member has permission message manage:
@@ -157,7 +157,7 @@ discord command leave:
 		exit
 
 discord command queue:
-	prefixes: $
+	prefixes: !
 	aliases: q
 	trigger:
 		if {track::1} is not set:
@@ -187,14 +187,14 @@ discord command queue:
 			exit
 
 discord command reload:
-	prefixes: $
+	prefixes: !
 	trigger:
 		reply with "Successfully reloaded b.sk"
 		execute console command "skript reload b"
 		exit
 
 discord command help:
-	prefixes: $
+	prefixes: !
 	executable in: guild
 	trigger:
 		set {_loop} to true
@@ -224,7 +224,7 @@ discord command help:
 							exit # this does not work currently
 						
 discord command fixtts:
-	prefixes: $
+	prefixes: !
 	executable in: guild
 	trigger:
 		clear {check}
@@ -236,7 +236,7 @@ on load:
 	exit
 
 discord command tts <text>:
-	prefixes: $
+	prefixes: !
 	executable in: guild
 	trigger:
 		if {check} is set:
@@ -283,7 +283,7 @@ discord command tts <text>:
 					exit
 
 discord command queuedebug:
-	prefixes: $
+	prefixes: !
 	trigger:
 		set {_tracks::*} to {_queue::*}
 		exit
@@ -302,7 +302,7 @@ on track end seen by "Gigavibe":
 		exit
 
 discord command ping: 
-	prefixes: $
+	prefixes: !
 	executable in: guild
 	trigger:
 		set {_unixtime} to unix timestamp of now
