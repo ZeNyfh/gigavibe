@@ -249,13 +249,9 @@ discord command tts <text>:
 			if length of {_limiter} > 500:
 				reply with "The character limit is 500"
 				exit
-			if arg-1 contains """":
+			if arg-1 contains "'''":
 				clear {check}
-				reply with "illegal character: **""**, not sending message"
-				exit
-			if arg-1 contains "<":
-				clear {check}
-				reply with "illegal character: **<**, not sending message"
+				reply with "illegal character: **'''**, not sending message"
 				exit
 			if {_vc} is not set:
 				reply with "get in a voice channel before using tts."
