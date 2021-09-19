@@ -1,4 +1,4 @@
-text = "bruh"
+# text line
 import pyttsx3
 ttsObject = pyttsx3.init()
 ttsObject.setProperty("voice",ttsObject.getProperty('voices')[0].id)
