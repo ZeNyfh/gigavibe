@@ -1,0 +1,12 @@
+**Syntax**
+`<>` is a required argument, [] is an optional argument
+
+**Commands**
+`help` - Displays this message.
+`play <text/url>` - Plays a track from youtube.
+`soundcloud <text/url>` - Plays a track from soundcloud. ~~broken~~
+`np/nowplaying` - Shows what track is currently playing.
+`queue` - Shows the current queue. ~~semi-functioning~~
+`tts <text>` - Sends a text to speech message in the current VC.
+`dj <@role/list>` - Sets a role as a DJ or shows which roles have DJ.
+`ping` - Shows the bots ping.
