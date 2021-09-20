@@ -37,7 +37,7 @@ discord command soundcloud [<string>]: # this does not work for some reason
 
 discord command play [<string>]:
 	prefixes: !
-	aliases: p
+	aliases: p, youtube
 	trigger:
 		if arg 1 is not set:
 			make embed:

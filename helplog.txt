@@ -3,7 +3,7 @@
 
 **Commands**
 `help` - Displays this message.
-`play <text/url>` - Plays a track from youtube.
+`play/youtube <text/url>` - Plays a track from youtube.
 `soundcloud <text/url>` - Plays a track from soundcloud. ~~broken~~
 `np/nowplaying` - Shows what track is currently playing.
 `queue` - Shows the current queue. ~~semi-functioning~~
