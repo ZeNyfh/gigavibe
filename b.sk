@@ -188,8 +188,6 @@ discord command forceskipall:
 			send last embed to event-channel
 			exit
 
-
-
 discord command forceskip:
 	aliases: fs
 	prefixes: !
