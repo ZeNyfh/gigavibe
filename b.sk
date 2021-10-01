@@ -148,6 +148,7 @@ discord command voteskip:
 				send last embed to event-channel
 				skip track of event-guild
 				clear {userid::*}
+				clear {temp}
 				wait 60 seconds
 				if the bot is playing in the event-guild: # this is backwards
 					disconnect bot of event-guild
