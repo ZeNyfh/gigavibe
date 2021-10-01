@@ -346,10 +346,11 @@ discord command whitelist <text>:
 	trigger:
 		set {_a} to arg-1 parsed as member
 		if {blockeddj::*} contains {_a}:
+			remove {_a} from {blockeddj::*}
 			make embed:
 				set description of embed to "✅ `whitelisted %{_a}%.`"
 				set color of embed to color from rgb 32, 34, 37
-				send last embed to event-channel
+				send last embed to event-channel#
 			exit
 
 discord command blacklist [<text>]:
