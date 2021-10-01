@@ -181,7 +181,7 @@ discord command forceskipall:
 					clear {_queue::*}
 					clear {queue::*}
 			make embed:
-				set description of embed to ":fast_forward: `Skipped`"
+				set description of embed to ":fast_forward: `Skipped all`"
 				set color of embed to color from rgb 32, 34, 37
 				set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
 			send last embed to event-channel
