@@ -479,6 +479,7 @@ discord command tts <text>:
 					exit
 				else:
 					connect event-bot to voice channel of event-member
+					play {_fuckyou} in event-guild
 					wait 1 second
 					delete file "plugins/TTS.mp3"
 					clear {_fuckyou}
