@@ -324,15 +324,6 @@ discord command help:
 				# if event-member has permission message manage:
 				# button stuff will be here
 
-discord command fixtts:
-	prefixes: !
-	executable in: guild
-	trigger:
-		if discord id of event-member is "211789389401948160":
-			clear {check}
-			send "ok, fixed that" to event-channel
-		exit
-
 discord command clear queue:
 	aliases: queue clear, clearqueue, queueclear
 	prefixes: !
@@ -494,13 +485,6 @@ discord command tts <text>:
 					clear {_test}
 					clear {check}
 					exit
-
-discord command queuedebug:
-	prefixes: !
-	trigger:
-		if discord id of event-member is "211789389401948160":
-			set {_tracks::*} to {_queue::*}
-		exit
 
 on track end seen by "Gigavibe":
 	wait 60 seconds
