@@ -1,6 +1,7 @@
 discord command soundcloud [<string>]: # this does not work for some reason
 	prefixes: !
 	aliases: sc
+	executable in: guild
 	trigger:
 		if arg 1 is not set:
 			make embed:
@@ -36,6 +37,7 @@ discord command soundcloud [<string>]: # this does not work for some reason
 discord command play [<string>]:
 	prefixes: !
 	aliases: p, youtube
+	executable in: guild
 	trigger:
 		if arg 1 is not set:
 			make embed:
@@ -264,6 +266,7 @@ discord command leave:
 discord command queue:
 	prefixes: !
 	aliases: q
+	executable in: guild
 	trigger:
 		set {queue::*} to queue of event-guild
 		set {_current} to the track the bot is playing in the event-guild
@@ -295,8 +298,9 @@ discord command queue:
 discord command reload:
 	prefixes: !
 	trigger:
-		send "Successfully reloaded b.sk" to event-channel
-		execute console command "skript reload b"
+		if discord id of event-member is "211789389401948160":
+			send "Successfully reloaded b.sk" to event-channel
+			execute console command "skript reload b"
 		exit
 
 discord command help:
@@ -319,13 +323,14 @@ discord command help:
 				send last embed to event-channel
 				# if event-member has permission message manage:
 				# button stuff will be here
-						
+
 discord command fixtts:
 	prefixes: !
 	executable in: guild
 	trigger:
-		clear {check}
-		send "ok, fixed that" to event-channel
+		if discord id of event-member is "211789389401948160":
+			clear {check}
+			send "ok, fixed that" to event-channel
 		exit
 
 discord command clear queue:
@@ -493,9 +498,9 @@ discord command tts <text>:
 discord command queuedebug:
 	prefixes: !
 	trigger:
-		set {_tracks::*} to {_queue::*}
+		if discord id of event-member is "211789389401948160":
+			set {_tracks::*} to {_queue::*}
 		exit
-
 
 on track end seen by "Gigavibe":
 	wait 60 seconds
@@ -514,7 +519,7 @@ on track end seen by "Gigavibe":
 		play {track::1} in event-guild
 		exit
 
-discord command ping: 
+discord command ping:
 	prefixes: !
 	executable in: guild
 	trigger:
