@@ -323,6 +323,7 @@ discord command clear queue:
 				clear {track::*}
 				clear {queue::*}
 				clear queue of event-guild
+				stop queue of event-guild
 				set {_tracks::*} to {_queue::*}
 				remove "zenyfhwashere" from {dj::*}
 				make embed:
