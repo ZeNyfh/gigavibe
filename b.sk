@@ -345,7 +345,7 @@ discord command whitelist <text>:
 	executable in: guild
 	trigger:
 		set {_a} to arg-1 parsed as member
-		if {_blockeddj::*} contains {_a}:
+		if {blockeddj::*} contains {_a}:
 			make embed:
 				set description of embed to "✅ `whitelisted %{_a}%.`"
 				set color of embed to color from rgb 32, 34, 37
@@ -358,7 +358,7 @@ discord command blacklist [<text>]:
 	trigger:
 		if arg-1 is not set:
 			make embed:
-				set description of embed to join {_blockeddj::*} with nl
+				set description of embed to join {blockeddj::*} with nl
 				set color of embed to color from rgb 32, 34, 37
 				send last embed to event-channel
 			exit
@@ -366,7 +366,7 @@ discord command blacklist [<text>]:
 			set {_a} to arg-1 parsed as member
 			set {blockeddj::*} to id of discord entity {_a}
 			make embed:
-				set description of embed to "✅ `added %{_a}% to blacklist.`"
+				set description of embed to "✅ `blacklisted %{_a}%`"
 				set color of embed to color from rgb 32, 34, 37
 				send last embed to event-channel
 			exit
