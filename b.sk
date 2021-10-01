@@ -46,7 +46,7 @@ discord command play [<string>]:
 			send last embed to event-channel
 			exit
 		connect event-bot to voice channel of event-member
-		set {_a} to channel of event-bot in event-guild
+		set {_a} to channel of event-user in event-guild
 		if {_a} is not set:
 			make embed:
 				set description of embed to "❌ `You need to be in a voice channel to use this command.`"
