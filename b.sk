@@ -9,8 +9,7 @@ discord command soundcloud [<string>]: # this does not work for some reason
 				set color of embed to color from rgb 32, 34, 37
 			send last embed to event-channel
 			exit
-		connect event-bot to voice channel of event-member
-		set {_a} to channel of event-bot in event-guild
+		set {_a} to channel of event-member in event-guild
 		if {_a} is not set:
 			make embed:
 				set description of embed to "❌ `You need to be in a voice channel to use this command.`"
@@ -45,8 +44,7 @@ discord command play [<string>]:
 				set color of embed to color from rgb 32, 34, 37
 			send last embed to event-channel
 			exit
-		connect event-bot to voice channel of event-member
-		set {_a} to channel of event-bot in event-guild
+		set {_a} to channel of event-member in event-guild
 		if {_a} is not set:
 			make embed:
 				set description of embed to "❌ `You need to be in a voice channel to use this command.`"
@@ -72,6 +70,10 @@ discord command play [<string>]:
 			send last embed to event-channel
 			clear {track::1}
 			exit
+
+on bot leave:
+	clear queue of event-guild
+	clear {track::*}
 
 discord command np:
 	aliases: nowplaying
@@ -168,20 +170,10 @@ discord command forceskipall:
 			send last embed to event-channel
 			exit
 		if event-member has permission message manage:
-			clear queue of event-guild
-			skip track of event-guild
 			clear {queue::*}
-			clear {track::*}
-			clear queue of event-guild
-			loop {track::*}:
-				if loop-value is set:
-					wait 1 tick
-					skip track of event-guild
-					clear {track::*}
-					clear {_queue::*}
-					clear {queue::*}
+			stop current queue of event-guild
 			make embed:
-				set description of embed to ":fast_forward: `Skipped`"
+				set description of embed to ":fast_forward: `Skipped all`"
 				set color of embed to color from rgb 32, 34, 37
 				set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
 			send last embed to event-channel
@@ -195,6 +187,8 @@ discord command forceskipall:
 				set color of embed to color from rgb 32, 34, 37
 			send last embed to event-channel
 			exit
+
+
 
 discord command forceskip:
 	aliases: fs
@@ -241,15 +235,8 @@ discord command leave:
 				send last embed to event-channel
 				disconnect bot of event-guild
 				clear {queue::*}
-				clear {_B::*}
-				clear {_queue::*}
-				clear queue of event-guild
 				clear {track::*}
-				loop {track::*}:
-					if loop-value is set:
-						clear {track::*}
-						clear {_queue::*}
-						clear {queue::*}
+				stop current queue of event-guild
 				exit
 			else:
 				make embed:
