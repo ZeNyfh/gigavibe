@@ -469,7 +469,7 @@ discord command tts <text>:
 				exit
 			else:
 				set line 1 in file "plugins/PyTTS.pyw" to "text = '''%arg-1%'''" # replace VBS with python for linux compatibility
-				run batch cmd "C:\Users\david\Desktop\code_stuff\discordbot\plugins\a.bat"
+				run batch cmd "C:\Users\david\Desktop\code_stuff\discordbot\plugins\TTS.bat"
 				wait 1 second
 				load locale track from "plugins/TTS.mp3" and store it in {_fuckyou}
 				set {_vc} to voice channel of event-member
