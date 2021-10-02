@@ -1,5 +1,5 @@
 discord command play [<string>]:
-	prefixes: !
+	prefixes: ?
 	aliases: p, youtube
 	executable in: guild
 	trigger:
@@ -42,7 +42,7 @@ on bot leave:
 
 discord command np:
 	aliases: nowplaying
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		set {_current} to the track the bot is playing in the event-guild
@@ -71,7 +71,7 @@ discord command np:
 
 discord command voteskip:
 	aliases: skip
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		set {_a} to channel of event-member in event-guild
@@ -137,7 +137,7 @@ discord command voteskip:
 
 discord command forceskipall:
 	aliases: fsall
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		if voice channel of event-bot in event-guild is not set:
@@ -167,7 +167,7 @@ discord command forceskipall:
 
 discord command forceskip:
 	aliases: fs
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		if voice channel of event-bot in event-guild is not set:
@@ -197,7 +197,7 @@ discord command forceskip:
 			exit
 
 discord command leave:
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		if event-member has permission message manage:
@@ -226,7 +226,7 @@ discord command leave:
 		exit
 
 discord command queue:
-	prefixes: !
+	prefixes: ?
 	aliases: q
 	executable in: guild
 	trigger:
@@ -258,7 +258,7 @@ discord command queue:
 			exit
 
 discord command reload:
-	prefixes: !
+	prefixes: ?
 	trigger:
 		if discord id of event-member is "211789389401948160":
 			send "Successfully reloaded b.sk" to event-channel
@@ -267,7 +267,7 @@ discord command reload:
 
 discord command help:
 	aliases: cmds
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		set {_loop} to true
@@ -288,7 +288,7 @@ discord command help:
 
 discord command clear queue:
 	aliases: queue clear, clearqueue, queueclear
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		set {_test} to id of event-member
@@ -316,7 +316,7 @@ discord command clear queue:
 				exit
 
 discord command whitelist <text>:
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		if {blockeddj::*} contains discord id of event-member:
@@ -336,7 +336,7 @@ discord command whitelist <text>:
 				exit
 
 discord command blacklist [<text>]:
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		if arg-1 is not set:
@@ -355,7 +355,7 @@ discord command blacklist [<text>]:
 			exit
 
 discord command skiptrack [<number>]:
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		send "%arg-1%" to event-channel
@@ -384,7 +384,7 @@ on track start seen by "Trollvibe":
 		exit
 
 discord command dj [<text>]:
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		if {blockeddj::*} contains discord id of event-member:
@@ -446,7 +446,7 @@ on load:
 	exit
 
 discord command tts <text>:
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		if {check} is set:
@@ -505,7 +505,7 @@ on track end seen by "Trollvibe":
 		exit
 
 discord command ping:
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		set {_unixtime} to unix timestamp of now
