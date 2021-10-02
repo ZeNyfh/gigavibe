@@ -1,38 +1,3 @@
-discord command soundcloud [<string>]: # this does not work for some reason
-	prefixes: !
-	aliases: sc
-	executable in: guild
-	trigger:
-		if arg 1 is not set:
-			make embed:
-				set title of embed to "❌ **You need to specify a URL or a SoundCloud search term.**"
-				set color of embed to color from rgb 32, 34, 37
-			send last embed to event-channel
-			exit
-		set {_a} to channel of event-member in event-guild
-		if {_a} is not set:
-			make embed:
-				set description of embed to "❌ `You need to be in a voice channel to use this command.`"
-				set color of embed to color from rgb 32, 34, 37
-			send last embed to event-channel
-			exit
-		else:
-			connect event-bot to voice channel of event-member
-			search in soundcloud for arg-1 and store it in {track::*}
-			wait 1 second
-			play {track::1} in event-guild
-			make embed:
-				set title of embed to "%{track::1}%"
-				set title url of embed to track url of {track::1}
-				set color of embed to color from rgb 32, 34, 37
-				set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
-				set thumbnail of embed to track thumbnail of {track::1}
-				add "Duration: `%track duration of {track::1}%`" to {_l::*}
-				add "Channel: `%track author of {track::1}%`" to {_l::*}
-				set description of embed to join {_l::*} with nl
-			send last embed to event-channel
-			exit
-
 discord command play [<string>]:
 	prefixes: !
 	aliases: p, youtube
@@ -92,7 +57,7 @@ discord command np:
 				set {_42why::*} to "`🎵 Now playing:`"
 				set {_42why::*} to "%{_current}%"
 				set title of embed to join {_42why::*} with nl
-				set title url of embed to track url of {track::1}
+				set title url of embed to track url of {_current}
 				set color of embed to color from rgb 32, 34, 37
 				set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
 				set footer icon of embed to avatar of event-member
@@ -145,7 +110,19 @@ discord command voteskip:
 				set description of embed to join {_B::*} with nl
 				set color of embed to color from rgb 32, 34, 37
 			send last embed to event-channel
-			if {_votecount} > {_temp} / 2 - 1:
+			if {_votecount} = {_halfmembercount}:
+				make embed:
+					set description of embed to ":fast_forward: `Skipped`"
+					set color of embed to color from rgb 32, 34, 37
+				send last embed to event-channel
+				skip track of event-guild
+				clear {userid::*}
+				clear {temp}
+				wait 60 seconds
+				if the bot is playing in the event-guild: # this is backwards
+					disconnect bot of event-guild
+				exit
+			else if {_votecount} > {_halfmembercount}:
 				make embed:
 					set description of embed to ":fast_forward: `Skipped`"
 					set color of embed to color from rgb 32, 34, 37
@@ -267,11 +244,11 @@ discord command queue:
 				set color of embed to color from rgb 32, 34, 37
 				set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
 				set {_B::1} to "Songs:"
-				set {_B::2} to "•**%{_current}%**"
-				set {_B::3} to "•%{queue::1}%"
-				set {_B::4} to "•%{queue::2}%"
-				set {_B::5} to "•%{queue::3}%"
-				set {_B::6} to "•%{queue::4}%"	
+				set {_B::2} to "1.[**%{_current}%**](%track url of {_current}%)"
+				set {_B::3} to "2.[%{queue::1}%](%track url of {queue::1}%)"
+				set {_B::4} to "3.[%{queue::2}%](%track url of {queue::2}%)"
+				set {_B::5} to "4.[%{queue::3}%](%track url of {queue::3}%)"
+				set {_B::6} to "5.[%{queue::4}%](%track url of {queue::4}%)"
 				set description of embed to join {_B::*} with nl
 				set title of embed to "`📝 Queue`"
 			send last embed to event-channel
@@ -342,14 +319,21 @@ discord command whitelist <text>:
 	prefixes: !
 	executable in: guild
 	trigger:
-		set {_a} to arg-1 parsed as member
-		if {blockeddj::*} contains {_a}:
-			remove {_a} from {blockeddj::*}
+		if {blockeddj::*} contains discord id of event-member:
 			make embed:
-				set description of embed to "✅ `whitelisted %{_a}%.`"
+				set description of embed to "❌ `Insufficient permissions.`"
 				set color of embed to color from rgb 32, 34, 37
-				send last embed to event-channel#
-			exit
+				send last embed to event-channel
+				exit
+		else:
+			set {_a} to arg-1 parsed as member
+			if {blockeddj::*} contains {_a}:
+				remove {_a} from {blockeddj::*}
+				make embed:
+					set description of embed to "✅ `whitelisted %{_a}%.`"
+					set color of embed to color from rgb 32, 34, 37
+					send last embed to event-channel#
+				exit
 
 discord command blacklist [<text>]:
 	prefixes: !
@@ -369,6 +353,35 @@ discord command blacklist [<text>]:
 				set color of embed to color from rgb 32, 34, 37
 				send last embed to event-channel
 			exit
+
+discord command skiptrack [<number>]:
+	prefixes: !
+	executable in: guild
+	trigger:
+		send "%arg-1%" to event-channel
+		send "%{track::arg-1}%" to event-channel
+		clear {track::arg-1}
+		send "%{track::arg-1}%" to event-channel
+		if arg-1 is not set:
+			make embed:
+				set description of embed to "❌ `No argument given.`"
+				set color of embed to color from rgb 32, 34, 37
+			send last embed to event-channel
+			exit
+		else: 
+			if {blockeddj::*} contains discord id of event-member:
+				make embed:
+					set description of embed to "❌ `Insufficient permissions.`"
+					set color of embed to color from rgb 32, 34, 37
+				send last embed to event-channel
+				exit
+
+on track start seen by "Gigavibe":
+	set {_tempid} to {track::1}
+	if {_tempid} is {trackid}:
+		skip track of event-guild
+	else:
+		exit
 
 discord command dj [<text>]:
 	prefixes: !
