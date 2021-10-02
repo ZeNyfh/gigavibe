@@ -519,13 +519,12 @@ discord command ping:
 on load:
 	clear {token}
 
-command /startb:
+command /starta:
 	trigger:
-		if {token} is set:
+		if {tokentroll} is set:
 			send message "I am already running" to the console
 			exit
 		else:
-			set {token} to "ODkzMjY5NjQ3MDYxODExMjEw.YVZAMA.t0wMpd110KZwdeWAK3SLdUI0wec"
-			login to "ODkzMjY5NjQ3MDYxODExMjEw.YVZAMA.t0wMpd110KZwdeWAK3SLdUI0wec" with name "Trollvibe"
+			login to {tokentroll} with name "Trollvibe"
 			execute console command "save-all"
 			exit
