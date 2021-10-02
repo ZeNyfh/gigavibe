@@ -82,12 +82,14 @@ discord command voteskip:
 			send last embed to event-channel
 			exit
 		else:
-			add 1 to {_temp}
-			set {_members::*} to members in the voice channel of event-member in event-guild
-			loop {_members::*}:
+			add 1 to {temp}
+			set {members::*} to members in the voice channel of event-member in event-guild
+			loop {members::*}:
 				if loop-value is a discord bot:
-					remove loop-value from {_members::*}
-					add 1 to {_temp}
+					remove loop-value from {members::*}
+					remove 1 from {temp}
+				if loop-value is a member:
+					add 1 to {temp}
 			if {userid::*} contains id of event-member:
 				make embed:
 					set description of embed to "❌ `You have already voted to skip.`"
@@ -101,35 +103,33 @@ discord command voteskip:
 					set color of embed to color from rgb 32, 34, 37
 				send last embed to event-channel
 				exit
-			add 1 to {_votecount}
+			remove 1 from {temp}
+			add 1 to {votecount}
 			add id of event-member to {userid::*}
-			set {_halfmembercount} to {_temp} / 2
+			set {halfmembercount} to {temp} / 2
+			set {_a} to floor({halfmembercount})
+			set {halfmembercount} to {_a}
 			make embed:
 				set {_B::1} to "✅ `You voted to skip the current track.`"
-				set footer of embed to "%{_votecount}% of %{_halfmembercount}% needed to skip"
+				set footer of embed to "%{votecount}% of %{halfmembercount}% needed to skip"
 				set description of embed to join {_B::*} with nl
 				set color of embed to color from rgb 32, 34, 37
 			send last embed to event-channel
-			if {_votecount} = {_halfmembercount}:
+			clear {temp}
+			if {votecount} = {halfmembercount}:
 				make embed:
 					set description of embed to ":fast_forward: `Skipped`"
 					set color of embed to color from rgb 32, 34, 37
 				send last embed to event-channel
 				skip track of event-guild
 				clear {userid::*}
-				clear {temp}
-				wait 60 seconds
-				if the bot is playing in the event-guild: # this is backwards
-					disconnect bot of event-guild
-				exit
-			else if {_votecount} > {_halfmembercount}:
-				make embed:
-					set description of embed to ":fast_forward: `Skipped`"
-					set color of embed to color from rgb 32, 34, 37
-				send last embed to event-channel
-				skip track of event-guild
 				clear {userid::*}
 				clear {temp}
+				clear {votecount}
+				clear {temp}
+				clear {userid::*}
+				clear {halfmembercount}
+				clear {votecount}
 				wait 60 seconds
 				if the bot is playing in the event-guild: # this is backwards
 					disconnect bot of event-guild
@@ -253,7 +253,6 @@ discord command queue:
 				set title of embed to "`📝 Queue`"
 			send last embed to event-channel
 			wait 1 seconds
-			clear {queue::*}
 			clear {_B::*}
 			exit
 
@@ -283,8 +282,10 @@ discord command help:
 					set description of embed to join {_helplist::*} with nl
 					set title of embed to "`📖 Help`"
 				send last embed to event-channel
-				# if event-member has permission message manage:
-				# button stuff will be here
+				if event-member has permission message manage:
+					add new button with id "custom-id1" with style danger with text "Close" to buttons of {_row}
+					add new button with id "customid2" with style success with text "DJ" to buttons of {_row}
+					add new button with id "customid3" with style primary with text "Admin" to buttons of {_row}
 
 discord command clear queue:
 	aliases: queue clear, clearqueue, queueclear
@@ -326,14 +327,44 @@ discord command whitelist <text>:
 				send last embed to event-channel
 				exit
 		else:
-			set {_a} to arg-1 parsed as member
-			if {blockeddj::*} contains {_a}:
-				remove {_a} from {blockeddj::*}
+			set {cancer1} to arg-1 parsed as member
+			if {blockeddj::*} contains {cancer1}:
+				remove {cancer1} from {blockeddj::*}
 				make embed:
-					set description of embed to "✅ `whitelisted %{_a}%.`"
+					set description of embed to "✅ `whitelisted %{cancer1}%.`"
 					set color of embed to color from rgb 32, 34, 37
-					send last embed to event-channel#
+					send last embed to event-channel
+			else:
+				make embed:
+					set description of embed to "❌ `This person is not blacklisted.`"
+					set color of embed to color from rgb 32, 34, 37
+					send last embed to event-channel
 				exit
+
+discord command clear blacklist:
+	prefixes: !
+	executable in: guild
+	trigger:
+		if {blockeddj::*} contains discord id of event-member:
+			make embed:
+				set description of embed to "❌ `Insufficient permissions.`"
+				set color of embed to color from rgb 32, 34, 37
+				send last embed to event-channel
+				exit
+		if event-member has permission message manage:
+			clear {blockeddj::*}
+			make embed:
+				set description of embed to "✅ `cleared the blacklist`"
+				set color of embed to color from rgb 32, 34, 37
+			send last embed to event-channel
+			exit
+		else:
+			make embed:
+				set description of embed to "❌ `Insufficient permissions.`"
+				set color of embed to color from rgb 32, 34, 37
+				send last embed to event-channel
+				exit
+
 
 discord command blacklist [<text>]:
 	prefixes: !
@@ -468,8 +499,8 @@ discord command tts <text>:
 				clear {check}
 				exit
 			else:
-				set line 1 in file "plugins/PyTTS.pyw" to "text = '''%arg-1%'''" # replace VBS with python for linux compatibility
-				run batch cmd "C:\Users\david\Desktop\code_stuff\discordbot\plugins\TTS.bat"
+				set line 1 in file "plugins/PyTTS.pyw" to "text = '''%arg-1%'''"
+				run batch cmd "C:\Users\david\Desktop\code_stuff\discordbot\plugins\a.bat"
 				wait 1 second
 				load locale track from "plugins/TTS.mp3" and store it in {_fuckyou}
 				set {_vc} to voice channel of event-member
@@ -525,7 +556,6 @@ command /startb:
 			send message "I am already running" to the console
 			exit
 		else:
-			set {token} to "ODc5NTI3Mzg5NzExOTkwNzg1.YSRBtg.D8MXrkTB61EZxENa_TUFHzM8-9o"
-			login to "ODc5NTI3Mzg5NzExOTkwNzg1.YSRBtg.D8MXrkTB61EZxENa_TUFHzM8-9o" with name "Gigavibe"
+			login to {tokenvibe} with name "Gigavibe"
 			execute console command "save-all"
 			exit
