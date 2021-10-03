@@ -60,7 +60,6 @@ discord command np:
 				set title url of embed to track url of {_current}
 				set color of embed to color from rgb 32, 34, 37
 				set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
-				set footer icon of embed to avatar of event-member
 				set thumbnail of embed to track thumbnail of {track::1}
 				add "Duration: `%track duration of {_current}%`" to {_l::*}
 				add "Channel: `%track author of {_current}%`" to {_l::*}
@@ -107,10 +106,10 @@ discord command voteskip:
 			add 1 to {votecount}
 			add id of event-member to {userid::*}
 			set {halfmembercount} to {temp} / 2
-			set {_a} to floor({halfmembercount})
+			set {aaa} to floor({halfmembercount})
 			set {halfmembercount} to {_a}
 			make embed:
-				set {_B::1} to "✅ `You voted to skip the current track.`"
+				set {_B::1} to "✅ You voted to skip the current track."
 				set footer of embed to "%{votecount}% of %{halfmembercount}% needed to skip"
 				set description of embed to join {_B::*} with nl
 				set color of embed to color from rgb 32, 34, 37
@@ -130,6 +129,7 @@ discord command voteskip:
 				clear {userid::*}
 				clear {halfmembercount}
 				clear {votecount}
+				clear {aaa}
 				wait 60 seconds
 				if the bot is playing in the event-guild: # this is backwards
 					disconnect bot of event-guild
@@ -239,21 +239,27 @@ discord command queue:
 			send last embed to event-channel
 			exit
 		else:
+			set {_totaltime} to track duration of {_current}
+			add track duration of {_current} to {_totaltime}
+			loop {queue::*}:
+				add track duration of loop-value to {_totaltime}
+				set {_totaltime} to {_totaltime} / 2
 			clear {_B::*}
 			make embed:
 				set color of embed to color from rgb 32, 34, 37
 				set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
-				set {_B::1} to "Songs:"
-				set {_B::2} to "1.[**%{_current}%**](%track url of {_current}%)"
-				set {_B::3} to "2.[%{queue::1}%](%track url of {queue::1}%)"
-				set {_B::4} to "3.[%{queue::2}%](%track url of {queue::2}%)"
-				set {_B::5} to "4.[%{queue::3}%](%track url of {queue::3}%)"
-				set {_B::6} to "5.[%{queue::4}%](%track url of {queue::4}%)"
+				set {_B::1} to "📝 `Queue`%nl%"
+				set {_B::2} to "`Now playing:` [**%{_current}%**](%track url of {_current}%)"
+				set {_B::3} to "1.[%{queue::1}%](%track url of {queue::1}%)"
+				set {_B::4} to "2.[%{queue::2}%](%track url of {queue::2}%)"
+				set {_B::5} to "3.[%{queue::3}%](%track url of {queue::3}%)"
+				set {_B::6} to "4.[%{queue::4}%](%track url of {queue::4}%)"
 				set description of embed to join {_B::*} with nl
-				set title of embed to "`📝 Queue`"
 			send last embed to event-channel
 			wait 1 seconds
 			clear {_B::*}
+			clear {_totaltime}
+			send "debug %{_totaltime}%" to event-channel
 			exit
 
 discord command reload:
@@ -280,22 +286,101 @@ discord command help:
 					set color of embed to color from rgb 32, 34, 37
 					set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
 					set description of embed to join {_helplist::*} with nl
-					set title of embed to "`📖 Help`"
-				send last embed to event-channel
-				if event-member has permission message manage:
-					add new button with id "custom-id1" with style danger with text "Close" to buttons of {_row}
-					add new button with id "customid2" with style success with text "DJ" to buttons of {_row}
-					add new button with id "customid3" with style primary with text "Admin" to buttons of {_row}
+					set title of embed to "**Commands**"
+				send last embed to event-channel and store it in {helpembed}
+				set {_test} to event-member
+				add "zenyfhwashere" to {dj::*}
+				set {_row} to new buttons row
+				loop {dj::*}:
+					set {_role} to loop-value parsed as role
+					if event-member has permission message manage:
+						add new button with id "close" with style danger with text "❌ Close" to buttons of {_row}
+						add new button with id "dj" with style success with text "🎵 Audio" to buttons of {_row}
+						add new button with id "help" with style primary with text "📖 General" to buttons of {_row}
+						add new button with id "admin" with style primary with text "📝 Admin" to buttons of {_row}
+						add row {_row} to message {helpembed}
+					else if {_test} has role {_role}:
+						add new button with id "close" with style danger with text "❌ Close" to buttons of {_row}
+						add new button with id "dj" with style success with text "🎵 Audio" to buttons of {_row}
+						add new button with id "help" with style primary with text "📖 General" to buttons of {_row}
+						add row {_row} to message {helpembed}
+					else:
+						add new button with id "close" with style danger with text "❌ Close" to buttons of {_row}
+						add new button with id "help" with style primary with text "📖 General" to buttons of {_row}
+						add row {_row} to message {helpembed}
+
+discord command github:
+	prefixes: !
+	aliases: bug
+	executable in: guild
+	trigger:
+		make embed:
+			set color of embed to color from rgb 32, 34, 37
+			add "❕ `Use this for bug reports and feature requests ONLY`%nl%" to {_a::*}
+			add "https://github.com/ZeNyfh/gigavibe/issues" to {_a::*}
+			set description of embed to join {_a::*} with nl
+		send last embed to event-channel
+
+on button click:
+	set {_id} to discord id of event-button
+	if {_id} is "close":
+		delete discord entity {helpembed}
+	if {_id} is "dj":
+		set {_loop} to true
+		set {_linecount} to 0
+		while {_loop} is true:
+			add 1 to {_linecount}
+			add line {_linecount} in file "plugins/djlog.txt" to {_helplist::*}
+			if {_linecount} = line count of file "plugins/djlog.txt":
+				set {_loop} to false
+				make embed:
+					set color of embed to color from rgb 32, 34, 37
+					set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+					set description of embed to join {_helplist::*} with nl
+					set title of embed to "🎵 `DJ Help`"
+				set {_embed} to last embed
+				edit {helpembed} with new embed {_embed} keeping buttons
+	if {_id} is "admin":
+		set {_loop} to true
+		set {_linecount} to 0
+		while {_loop} is true:
+			add 1 to {_linecount}
+			add line {_linecount} in file "plugins/adminlog.txt" to {_helplist::*}
+			if {_linecount} = line count of file "plugins/adminlog.txt":
+				set {_loop} to false
+				make embed:
+					set color of embed to color from rgb 32, 34, 37
+					set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+					set description of embed to join {_helplist::*} with nl
+					set title of embed to "📝 `Admin Help`"
+				set {_embed} to last embed
+				edit {helpembed} with new embed {_embed} keeping buttons
+	if {_id} is "help":
+		set {_loop} to true
+		set {_linecount} to 0
+		while {_loop} is true:
+			add 1 to {_linecount}
+			add line {_linecount} in file "plugins/helplog.txt" to {_helplist::*}
+			if {_linecount} = line count of file "plugins/helplog.txt":
+				set {_loop} to false
+				make embed:
+					set color of embed to color from rgb 32, 34, 37
+					set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+					set description of embed to join {_helplist::*} with nl
+					set title of embed to "📖 `Help`"
+				set {_embed} to last embed
+				edit {helpembed} with new embed {_embed} keeping buttons
 
 discord command clear queue:
 	aliases: queue clear, clearqueue, queueclear
 	prefixes: !
 	executable in: guild
 	trigger:
-		set {_test} to id of event-member
+		set {_test} to event-member
 		add "zenyfhwashere" to {dj::*}
 		loop {dj::*}:
-			if {_test} contains loop-value:
+			set {_role} to loop-value parsed as role
+			if {_test} has role {_role}:
 				clear {track::*}
 				clear {queue::*}
 				clear queue of event-guild
@@ -390,9 +475,9 @@ discord command skiptrack [<number>]:
 	executable in: guild
 	trigger:
 		send "%arg-1%" to event-channel
-		send "%{track::arg-1}%" to event-channel
+		send "%{track::arg-1::*}%" to event-channel
 		clear {track::arg-1}
-		send "%{track::arg-1}%" to event-channel
+		send "%{track::arg-1::*}%" to event-channel
 		if arg-1 is not set:
 			make embed:
 				set description of embed to "❌ `No argument given.`"
@@ -406,13 +491,6 @@ discord command skiptrack [<number>]:
 					set color of embed to color from rgb 32, 34, 37
 				send last embed to event-channel
 				exit
-
-on track start seen by "Gigavibe":
-	set {_tempid} to {track::1}
-	if {_tempid} is {trackid}:
-		skip track of event-guild
-	else:
-		exit
 
 discord command dj [<text>]:
 	prefixes: !
@@ -499,7 +577,7 @@ discord command tts <text>:
 				clear {check}
 				exit
 			else:
-				set line 1 in file "plugins/PyTTS.pyw" to "text = '''%arg-1%'''"
+				set line 1 in file "plugins/PyTTS.pyw" to "text = '''%arg-1%'''" # replace VBS with python for linux compatibility
 				run batch cmd "C:\Users\david\Desktop\code_stuff\discordbot\plugins\a.bat"
 				wait 1 second
 				load locale track from "plugins/TTS.mp3" and store it in {_fuckyou}
@@ -519,6 +597,23 @@ discord command tts <text>:
 					exit
 
 on track end seen by "Gigavibe":
+	wait 60 seconds
+	set {_tempid} to {track::1}
+	if {_tempid} is {trackid}:
+		skip track of event-guild
+	else:
+		exit
+
+on track end seen by "Gigavibe":
+	clear {userid::*}
+	clear {userid::*}
+	clear {temp}
+	clear {votecount}
+	clear {temp}
+	clear {userid::*}
+	clear {halfmembercount}
+	clear {votecount}
+	clear {aaa}
 	wait 60 seconds
 	if the bot is playing in the event-guild: # this is backwards
 		disconnect bot of event-guild
@@ -552,10 +647,6 @@ on load:
 
 command /startb:
 	trigger:
-		if {token} is set:
-			send message "I am already running" to the console
-			exit
-		else:
-			login to {tokenvibe} with name "Gigavibe"
-			execute console command "save-all"
-			exit
+		login to {tokenvibe} with name "Gigavibe"
+		execute console command "save-all"
+		exit
