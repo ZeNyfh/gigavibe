@@ -68,6 +68,13 @@ discord command np:
 			clear {_42why::*}
 			exit
 
+on load:
+	clear {userid::*}
+	clear {votecount}
+	clear {temp}
+	clear {halfmembercount}
+	clear {aaa}
+
 discord command voteskip:
 	aliases: skip
 	prefixes: !
@@ -105,30 +112,24 @@ discord command voteskip:
 			remove 1 from {temp}
 			add 1 to {votecount}
 			add id of event-member to {userid::*}
-			set {halfmembercount} to {temp} / 2
-			set {aaa} to floor({halfmembercount})
-			set {halfmembercount} to {_a}
-			make embed:
-				set {_B::1} to "✅ You voted to skip the current track."
-				set footer of embed to "%{votecount}% of %{halfmembercount}% needed to skip"
-				set description of embed to join {_B::*} with nl
-				set color of embed to color from rgb 32, 34, 37
-			send last embed to event-channel
-			clear {temp}
-			if {votecount} = {halfmembercount}:
+			set {halfmembercount} to round({temp}/2)
+			if {votecount} is not {halfmembercount}:
+				make embed:
+					set {_B::1} to "✅ You voted to skip the current track."
+					set footer of embed to "%{votecount}% of %{halfmembercount}% needed to skip"
+					set description of embed to join {_B::*} with nl
+					set color of embed to color from rgb 32, 34, 37
+				send last embed to event-channel
+			else if {votecount} = {halfmembercount}:
 				make embed:
 					set description of embed to ":fast_forward: `Skipped`"
 					set color of embed to color from rgb 32, 34, 37
 				send last embed to event-channel
 				skip track of event-guild
 				clear {userid::*}
-				clear {userid::*}
-				clear {temp}
 				clear {votecount}
 				clear {temp}
-				clear {userid::*}
 				clear {halfmembercount}
-				clear {votecount}
 				clear {aaa}
 				wait 60 seconds
 				if the bot is playing in the event-guild: # this is backwards
@@ -623,9 +624,7 @@ on track end seen by "Gigavibe":
 		exit
 
 on track end seen by "Gigavibe":
-	clear {userid::*}
 	clear {track::1}
-	wait 1 second
 	if {track::1} is set:
 		play {track::1} in event-guild
 		exit
