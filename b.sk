@@ -63,10 +63,21 @@ discord command np:
 				set thumbnail of embed to track thumbnail of {track::1}
 				add "Duration: `%track duration of {_current}%`" to {_l::*}
 				add "Channel: `%track author of {_current}%`" to {_l::*}
+				if bot is repeating in event-guild:
+					add "%nl%🔄 `Looping`" to {_l::*}
 				set description of embed to join {_l::*} with nl
 			send last embed to event-channel
 			clear {_42why::*}
 			exit
+
+on track end seen by "Gigavibe":
+	set {_members::*} to members in the voice channel of event-bot in event-guild
+	loop {members::*}:
+		if loop-value is a discord bot:
+			remove loop-value from {_members::*}
+	if {_members::*} is not set:
+		disconnect bot of event-guild
+
 
 on load:
 	clear {userid::*}
@@ -134,6 +145,7 @@ discord command voteskip:
 				wait 60 seconds
 				if the bot is playing in the event-guild: # this is backwards
 					disconnect bot of event-guild
+					set repeating state of event-guild to no
 				exit
 
 discord command forceskipall:
@@ -164,6 +176,7 @@ discord command forceskipall:
 					wait 60 seconds
 					if the bot is playing in the event-guild: # this is backwards
 						disconnect bot of event-guild
+						set repeating state of event-guild to no
 					exit
 				if {_test} does not have role {_role}:
 					make embed:
@@ -200,6 +213,7 @@ discord command forceskip:
 				wait 60 seconds
 				if the bot is playing in the event-guild: # this is backwards
 					disconnect bot of event-guild
+					set repeating state of event-guild to no
 				exit
 			if {_test} does not have role {_role}:
 				make embed:
@@ -229,6 +243,7 @@ discord command leave:
 					clear {queue::*}
 					clear {track::*}
 					stop current queue of event-guild
+					set repeating state of event-guild to no
 					exit
 				else:
 					make embed:
@@ -411,8 +426,8 @@ discord command whitelist <text>:
 			make embed:
 				set description of embed to "❌ `Insufficient permissions.`"
 				set color of embed to color from rgb 32, 34, 37
-				send last embed to event-channel
-				exit
+			send last embed to event-channel
+			exit
 		if event-member has permission message manage:
 			set {cancer1} to arg-1 parsed as member
 			if {blockeddj::*} contains {cancer1}:
@@ -420,14 +435,14 @@ discord command whitelist <text>:
 				make embed:
 					set description of embed to "✅ `whitelisted %{cancer1}%.`"
 					set color of embed to color from rgb 32, 34, 37
-					send last embed to event-channel
-					exit
+				send last embed to event-channel
+				exit
 		if {blockeddj::*} contains discord id of event-member:
 			make embed:
 				set description of embed to "❌ `Insufficient permissions.`"
 				set color of embed to color from rgb 32, 34, 37
-				send last embed to event-channel
-				exit
+			send last embed to event-channel
+			exit
 		else:
 			set {cancer1} to arg-1 parsed as member
 			if {blockeddj::*} contains {cancer1}:
@@ -440,7 +455,7 @@ discord command whitelist <text>:
 				make embed:
 					set description of embed to "❌ `This person is not blacklisted.`"
 					set color of embed to color from rgb 32, 34, 37
-					send last embed to event-channel
+				send last embed to event-channel
 				exit
 
 discord command clear blacklist:
@@ -451,8 +466,7 @@ discord command clear blacklist:
 			make embed:
 				set description of embed to "❌ `Insufficient permissions.`"
 				set color of embed to color from rgb 32, 34, 37
-				send last embed to event-channel
-				exit
+			send last embed to event-channel
 		if event-member has permission message manage:
 			clear {blockeddj::*}
 			make embed:
@@ -464,9 +478,82 @@ discord command clear blacklist:
 			make embed:
 				set description of embed to "❌ `Insufficient permissions.`"
 				set color of embed to color from rgb 32, 34, 37
+			send last embed to event-channel
+			exit
+
+discord command shuffledebug:
+	prefixes: !
+	executable in: guild
+	trigger:
+		set {track::*} to queue of event-guild
+		shuffle queue of event-guild
+		play {track::1} in event-guild
+		send "im working... maybe" to event-channel
+		exit
+
+discord command shuffle:
+	prefixes: !
+	executable in: guild
+	trigger:
+		if event-member does not have permission message manage:
+			make embed:
+				set description of embed to "❌ `Insufficient permissions.`"
+				set color of embed to color from rgb 32, 34, 37
+			send last embed to event-channel
+			exit
+		else:
+			shuffle queue of event-guild
+			set {track::*} to queue of event-guild
+			make embed:
+				set description of embed to "✅ `shuffled the queue`"
+				set color of embed to color from rgb 32, 34, 37
+			send last embed to event-channel
+			play {track::1} in event-guild
+			exit
+		if {blockeddj::*} contains discord id of event-member:
+			make embed:
+				set description of embed to "❌ `Insufficient permissions.`"
+				set color of embed to color from rgb 32, 34, 37
+			send last embed to event-channel
+			exit
+		else:
+			shuffle queue of event-guild
+			set {track::*} to queue of event-guild
+			make embed:
+				set description of embed to "✅ `shuffled the queue`"
+				set color of embed to color from rgb 32, 34, 37
+			send last embed to event-channel
+			play {track::1} in event-guild
+			exit
+
+discord command loop:
+	executable in: guild
+	prefixes: !
+	trigger:
+		if event-member does not have permission message manage:
+			make embed:
+				set description of embed to "❌ `Insufficient permissions.`"
+				set color of embed to color from rgb 32, 34, 37
+				send last embed to event-channel
+		if {blockeddj::*} contains discord id of event-member:
+			make embed:
+				set description of embed to "❌ `Insufficient permissions.`"
+				set color of embed to color from rgb 32, 34, 37
 				send last embed to event-channel
 				exit
-
+		if bot is repeating in event-guild:
+			set repeating state of event-guild to no
+			make embed:
+				set description of embed to "✅ `No longer looping the current track.`"
+				set color of embed to color from rgb 32, 34, 37
+			send last embed to event-channel
+		else:
+			set repeating state of event-guild to yes
+			make embed:
+				set description of embed to "🔄 `Looping the current track.`"
+				set color of embed to color from rgb 32, 34, 37
+			send last embed to event-channel
+			exit
 
 discord command blacklist [<text>]:
 	prefixes: !
@@ -477,7 +564,6 @@ discord command blacklist [<text>]:
 				set description of embed to join {blockeddj::*} with nl
 				set color of embed to color from rgb 32, 34, 37
 				send last embed to event-channel
-			exit
 		else:
 			set {_a} to arg-1 parsed as member
 			set {blockeddj::*} to id of discord entity {_a}
@@ -486,59 +572,6 @@ discord command blacklist [<text>]:
 				set color of embed to color from rgb 32, 34, 37
 				send last embed to event-channel
 			exit
-
-#discord command skiptrack [<number>]:
-#	prefixes: !
-#	executable in: guild
-#	trigger:
-#		set {track::*} to queue of event-guild
-#		if arg-1 is 1:
-#			make embed:
-#				set description of embed to ":fast_forward: `Skipped`"
-#				set color of embed to color from rgb 32, 34, 37
-#			send last embed to event-channel
-#			clear {track::1}
-#			skip track of event-guild
-#			wait 1 second
-#			play {track::1} in event-guild
-#			exit
-#		else:
-#			set {_number} to 1
-#			loop {track::*}:
-#				add 1 to {_number}
-#				if {_number} is arg-1:
-#					remove loop-value from {track::*}
-#					set {skiptrack} to track id of loop-value
-#					make embed:
-#						set description of embed to ":fast_forward: `Skipped`"
-#						set color of embed to color from rgb 32, 34, 37
-#					send last embed to event-channel
-#					send "%loop-value%" to event-channel
-#			if arg-1 is not a number:
-#				make embed:
-#					set description of embed to "❌ `The argument given was not a number.`"
-#					set color of embed to color from rgb 32, 34, 37
-#				send last embed to event-channel
-#				exit
-#			if arg-1 is not set:
-#				make embed:
-#					set description of embed to "❌ `No argument given.`"
-#					set color of embed to color from rgb 32, 34, 37
-#				send last embed to event-channel
-#				exit
-#			else if {blockeddj::*} contains discord id of event-member:
-#				make embed:
-#					set description of embed to "❌ `Insufficient permissions.`"
-#					set color of embed to color from rgb 32, 34, 37
-#				send last embed to event-channel
-#				exit
-#
-# If you can fix this, please do :)  (you cant, because you cant set the actual queue to something)
-
-on track start:
-	if track id of {track::1} is {skiptrack}:
-		skip current track of event-guild
-		exit
 
 discord command dj [<text>]:
 	prefixes: !
@@ -668,12 +701,15 @@ on track end seen by "Gigavibe":
 		clear {track::*}
 		clear {queue::*}
 		clear queue of event-guild
+		if repeating state of event-guild is yes:
+			set repeating state of event-guild to no
 		exit
 
 on track end seen by "Gigavibe":
 	clear {track::1}
 	if {track::1} is set:
 		play {track::1} in event-guild
+		set repeating state of event-guild to no
 		exit
 
 discord command ping:
