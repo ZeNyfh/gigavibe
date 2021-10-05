@@ -1,7 +1,7 @@
 Click the buttons to get more information on a group
-**audio**
-`play` `skip` `np` `tts` `forceskip` `queue` `clear queue`
 **general**
 `help` `github`
+**audio**
+`play` `skip` `np` `tts` `forceskip` `queue` `clear queue`
 **admin**
 `ping` `dj` `blacklist` `whitelist` `leave`
