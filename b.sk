@@ -22,6 +22,7 @@ discord command play [<string>]:
 			add {_searchresult::1} to {track::*}
 			wait 1 second
 			play {track::1} in event-guild
+			set {unixtime} to unix timestamp of now
 			clear {_searchresult::*}
 			make embed:
 				set title of embed to "%{track::1}%"
@@ -53,6 +54,8 @@ discord command np:
 			send last embed to event-channel
 			exit
 		else:
+			set {_unixtime} to unix timestamp of now
+			set {tracktime} to {_unixtime} - {unixtime}
 			make embed:
 				set {_42why::*} to "`🎵 Now playing:`"
 				set {_42why::*} to "%{_current}%"
@@ -68,6 +71,9 @@ discord command np:
 				set description of embed to join {_l::*} with nl
 			send last embed to event-channel
 			clear {_42why::*}
+			set {_duration} to track duration of {_current}
+			send "duration: %{_duration}%" to event-channel
+			send "time in: %{tracktime}%" to event-channel
 			exit
 
 on track end seen by "Gigavibe":
@@ -77,7 +83,6 @@ on track end seen by "Gigavibe":
 			remove loop-value from {_members::*}
 	if {_members::*} is not set:
 		disconnect bot of event-guild
-
 
 on load:
 	clear {userid::*}
@@ -210,6 +215,7 @@ discord command forceskip:
 				send last embed to event-channel
 				wait 1 second
 				play {track::1} in event-guild
+				set {unixtime} to unix timestamp of now
 				wait 60 seconds
 				if the bot is playing in the event-guild: # this is backwards
 					disconnect bot of event-guild
