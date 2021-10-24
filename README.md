@@ -1,5 +1,5 @@
 # gigavibe
-Discord bot written in skript for audio functionality.
+> Discord bot written in skript for audio functionality.
 
 # Installation
 > Unzip plugins.zip into your plugins folder.
