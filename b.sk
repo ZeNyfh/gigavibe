@@ -325,6 +325,7 @@ discord command help:
 				add new button with id "help" with style secondary with text "General" to buttons of {_row}
 				add new button with id "dj" with style secondary with text "Audio" to buttons of {_row}
 				add new button with id "admin" with style secondary with text "Admin" to buttons of {_row}
+				add row {_row} to {helpembed}
 
 discord command github:
 	prefixes: !
@@ -339,9 +340,11 @@ discord command github:
 		send last embed to event-channel
 
 on button click:
+	set {_row} to new buttons row
+	add new button with id "help" with style secondary with text "General" to buttons of {_row}
+	add new button with id "dj" with style secondary with text "Audio" to buttons of {_row}
+	add new button with id "admin" with style secondary with text "Admin" to buttons of {_row}
 	set {_id} to discord id of event-button
-	if {_id} is "close":
-		delete discord entity {helpembed}
 	if {_id} is "dj":
 		set {_loop} to true
 		set {_linecount} to 0
@@ -356,7 +359,11 @@ on button click:
 					set description of embed to join {_helplist::*} with nl
 					set title of embed to "🔊 `Audio`"
 				set {_embed} to last embed
-				edit {helpembed} with new embed {_embed} keeping buttons
+				delete discord entity {helpembed}
+				delete discord entity {embed}
+				send last embed to event-channel and store it in {embed}
+				wait 0.5 seconds
+				add row {_row} to {embed}
 	if {_id} is "admin":
 		set {_loop} to true
 		set {_linecount} to 0
@@ -371,7 +378,11 @@ on button click:
 					set description of embed to join {_helplist::*} with nl
 					set title of embed to "📝 `Admin Help`"
 				set {_embed} to last embed
-				edit {helpembed} with new embed {_embed} keeping buttons
+				delete discord entity {helpembed}
+				delete discord entity {embed}
+				send last embed to event-channel and store it in {embed}
+				wait 0.5 seconds
+				add row {_row} to {embed}
 	if {_id} is "help":
 		set {_loop} to true
 		set {_linecount} to 0
@@ -386,7 +397,11 @@ on button click:
 					set description of embed to join {_helplist::*} with nl
 					set title of embed to "📖 `Help`"
 				set {_embed} to last embed
-				edit {helpembed} with new embed {_embed} keeping buttons
+				delete discord entity {embed}
+				delete discord entity {helpembed}
+				send last embed to event-channel and store it in {embed}
+				wait 0.5 seconds
+				add row {_row} to {embed}
 
 discord command clear queue:
 	aliases: queue clear, clearqueue, queueclear
@@ -480,51 +495,6 @@ discord command clearblacklist:
 				set description of embed to "❌ `Insufficient permissions.`"
 				set color of embed to color from rgb 32, 34, 37
 			send last embed to event-channel
-			exit
-
-discord command shuffledebug:
-	prefixes: !
-	executable in: guild
-	trigger:
-		set {track::*} to queue of event-guild
-		shuffle queue of event-guild
-		play {track::1} in event-guild
-		send "im working... maybe" to event-channel
-		exit
-
-discord command shuffle:
-	prefixes: !
-	executable in: guild
-	trigger:
-		if event-member does not have permission message manage:
-			make embed:
-				set description of embed to "❌ `Insufficient permissions.`"
-				set color of embed to color from rgb 32, 34, 37
-			send last embed to event-channel
-			exit
-		else:
-			shuffle queue of event-guild
-			set {track::*} to queue of event-guild
-			make embed:
-				set description of embed to "✅ `shuffled the queue`"
-				set color of embed to color from rgb 32, 34, 37
-			send last embed to event-channel
-			play {track::1} in event-guild
-			exit
-		if {blockeddj::*} contains discord id of event-member:
-			make embed:
-				set description of embed to "❌ `Insufficient permissions.`"
-				set color of embed to color from rgb 32, 34, 37
-			send last embed to event-channel
-			exit
-		else:
-			shuffle queue of event-guild
-			set {track::*} to queue of event-guild
-			make embed:
-				set description of embed to "✅ `shuffled the queue`"
-				set color of embed to color from rgb 32, 34, 37
-			send last embed to event-channel
-			play {track::1} in event-guild
 			exit
 
 discord command loop:
