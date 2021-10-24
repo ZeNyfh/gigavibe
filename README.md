@@ -6,8 +6,8 @@
 > Unzip plugins.zip into your plugins folder.
 
 > Place all of these into your plugins folder:
-a.sh
-a.bat
+TTS.sh
+TTS.bat
 PyTTS.pyw
 helplog.txt
 djlog.txt
