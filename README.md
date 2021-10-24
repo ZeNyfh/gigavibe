@@ -6,9 +6,12 @@
 > Unzip plugins.zip into your plugins folder.
 
 # Prerequisites
-> jdk8/jdk11/jdk16 (jdk11 recommended)
-> python 3.x (3.8 or 3.9 recommended)
-> A minecraft server running bukkit/spigot/paper (paper recommended)
+jdk8/jdk11/jdk16 
+> (jdk11 recommended)
+python 3.x 
+> (3.8 or 3.9 recommended)
+A minecraft server running bukkit/spigot/paper
+> (paper recommended)
 
 > Place all of these into your plugins folder:
 TTS.sh
