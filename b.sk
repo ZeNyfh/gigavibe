@@ -458,7 +458,8 @@ discord command whitelist <text>:
 				send last embed to event-channel
 				exit
 
-discord command clear blacklist:
+discord command clearblacklist:
+	aliases: blaclistclear
 	prefixes: !
 	executable in: guild
 	trigger:
@@ -637,7 +638,7 @@ on load:
 	clear {check}
 	exit
 
-discord command dj clear:
+discord command djclear:
 	prefixes: !
 	executable in: guild
 	trigger:
@@ -661,7 +662,7 @@ discord command dj clear:
 		send last embed to event-channel
 		exit
 
-discord command dj list:
+discord command djlist:
 	prefixes: !
 	executable in: guild
 	trigger:
@@ -708,15 +709,13 @@ discord command tts <text>:
 				clear {check}
 				exit
 			else:
-				if os is windows:
-					set {_path} to absolute path of "plugins/"
-				if os is linux:
-					set {_path} to absolute path of "plugins\"
-				set line 1 in file "%{_path}%PyTTS.pyw" to "text = '''%arg-1%'''"
-				if os is linux:
-					run sh cmd "%{_path}%TTS.sh"
-				if os is windows:
-					run batch cmd "%{_path}%TTS.bat"
+				set {_path} to absolute path of "plugins"
+				set line 1 in file "%{_path}%/PyTTS.pyw" to "text = '''%arg-1%'''" # is os expression is broken so no checks :(
+				set line 1 in file "plugins/TTS.bat" to "start %{_path}%/PyTTS"
+				set line 1 in file "plugins/TTS.sh" to "cd %{_path}%"
+				set line 2 in file "plugins/TTS.sh" to "python3 PyTTS"
+				run batch cmd "plugins/TTS.bat"
+				run sh cmd "plugins/TTS.sh"
 				wait 1 second
 				load locale track from "plugins/TTS.mp3" and store it in {_temptrack}
 				set {_vc} to voice channel of event-member
@@ -727,7 +726,7 @@ discord command tts <text>:
 				else:
 					connect event-bot to voice channel of event-member
 					play {_temptrack} in event-guild
-					wait 1 second
+					wait 3 second
 					delete file "plugins/TTS.mp3"
 					clear {_temptrack}
 					clear {_test}
