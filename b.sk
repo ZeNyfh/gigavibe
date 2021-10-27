@@ -57,7 +57,6 @@ discord command np:
 			clear {totaltime}
 			set {_unixtime} to unix timestamp of now
 			set {tracktime} to {_unixtime} - {unixtime}
-			send last embed to event-channel
 			clear {_42why::*}
 			set {_totaltime} to track duration of {_current}
 			set {_test} to "%{_totaltime}%" parsed as timespan
@@ -80,7 +79,50 @@ discord command np:
 				if {_timesplit::2} is not set:
 					if {_timesplit::1} is set:
 						add {_timesplit::1} parsed as number to {totaltime}
-			set {_timeleft} to {totaltime} - {tracktime}			
+			set {_timeleft} to {totaltime} - {tracktime}
+			set {_location} to 20-round( ({totaltime}-{tracktime})/{totaltime} * 20 )
+			if {_location} is 0:
+				set {_line} to "🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+			if {_location} is 1:
+				set {_line} to "▬🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+			if {_location} is 2:
+				set {_line} to "▬▬🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+			if {_location} is 3:
+				set {_line} to "▬▬▬🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+			if {_location} is 4:
+				set {_line} to "▬▬▬▬🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+			if {_location} is 5:
+				set {_line} to "▬▬▬▬▬🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+			if {_location} is 6:
+				set {_line} to "▬▬▬▬▬▬🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+			if {_location} is 7:
+				set {_line} to "▬▬▬▬▬▬▬🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
+			if {_location} is 8:
+				set {_line} to "▬▬▬▬▬▬▬▬🔘▬▬▬▬▬▬▬▬▬▬▬▬▬"
+			if {_location} is 9:
+				set {_line} to "▬▬▬▬▬▬▬▬▬🔘▬▬▬▬▬▬▬▬▬▬▬▬"
+			if {_location} is 10:
+				set {_line} to "▬▬▬▬▬▬▬▬▬▬🔘▬▬▬▬▬▬▬▬▬▬▬"
+			if {_location} is 11:
+				set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬🔘▬▬▬▬▬▬▬▬▬"
+			if {_location} is 12:
+				set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬▬🔘▬▬▬▬▬▬▬▬"
+			if {_location} is 13:
+				set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬▬▬🔘▬▬▬▬▬▬▬"
+			if {_location} is 14:
+				set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬🔘▬▬▬▬▬▬"
+			if {_location} is 15:
+				set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬🔘▬▬▬▬▬"
+			if {_location} is 16:
+				set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬🔘▬▬▬▬"
+			if {_location} is 17:
+				set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬🔘▬▬▬"
+			if {_location} is 18:
+				set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬🔘▬▬"
+			if {_location} is 19:
+				set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬🔘▬"
+			if {_location} is 20:
+				set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬🔘" # there was no other way to do this, i hate skript
 			make embed:
 				set {_42why::*} to "`🎵 Now playing:`"
 				set {_42why::*} to "%{_current}%"
@@ -89,13 +131,28 @@ discord command np:
 				set color of embed to color from rgb 32, 34, 37
 				set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
 				set thumbnail of embed to track thumbnail of {track::1}
-				add "Duration: `%track duration of {_current}%`" to {_l::*}
+				add "%nl%%nl%`%{_line}%`%nl%" to {_l::*}
+				set {_tracktime} to "%{tracktime}% seconds" parsed as timespan
+				set {_tracktime} to {_tracktime} 
+				add "Duration: `%{_tracktime}% / %track duration of {_current}%`%nl%" to {_l::*}
 				add "Channel: `%track author of {_current}%`" to {_l::*}
 				if bot is repeating in event-guild:
 					add "%nl%🔄 `Looping`" to {_l::*}
 				set description of embed to join {_l::*} with nl
-			send "%{_timeleft}%" to event-channel
+			send last embed to event-channel
+			clear {tracktime}
 			exit
+
+discord command debug:
+	prefixes: !
+	executable in: guild
+	trigger:
+		loop 20 times:
+			add "▬" to {_b::*}
+			replace all " " with "" in {_b::*}
+			replace all "," with "" in {_b::*}
+			replace all "and" with "" in {_b::*}
+		send "%{_b::*}%" to event-channel
 
 on track end seen by "Gigavibe":
 	set {_members::*} to members in the voice channel of event-bot in event-guild
