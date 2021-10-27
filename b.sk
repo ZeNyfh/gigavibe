@@ -54,8 +54,33 @@ discord command np:
 			send last embed to event-channel
 			exit
 		else:
+			clear {totaltime}
 			set {_unixtime} to unix timestamp of now
 			set {tracktime} to {_unixtime} - {unixtime}
+			send last embed to event-channel
+			clear {_42why::*}
+			set {_totaltime} to track duration of {_current}
+			set {_test} to "%{_totaltime}%" parsed as timespan
+			set {_test} to "%{_test}%"
+			replace all " seconds" or " second" with "" in {_test}
+			replace all " minutes" or " minute" with "" in {_test}
+			replace all " hours" or " hour" with "" in {_test}
+			replace all " and" with "" in {_test}
+			set {_timesplit::*} to "%{_test}%" split at " "
+			if {_timesplit::3} is set:
+				set {totaltime} to {_timesplit::1} * 3600
+				add {_timesplit::2} * 60 to {totaltime}
+				add {_timesplit::3} to {totaltime}
+			if {_timesplit::3} is not set:
+				if {_timesplit::2} is set:
+					set {_timesplit::1} to {_timesplit::1} parsed as number
+					add {_timesplit::1} * 60 to {totaltime}
+					add {_timesplit::2} parsed as number to {totaltime}
+			if {_timesplit::3} is not set:
+				if {_timesplit::2} is not set:
+					if {_timesplit::1} is set:
+						add {_timesplit::1} parsed as number to {totaltime}
+			set {_timeleft} to {totaltime} - {tracktime}			
 			make embed:
 				set {_42why::*} to "`🎵 Now playing:`"
 				set {_42why::*} to "%{_current}%"
@@ -69,11 +94,7 @@ discord command np:
 				if bot is repeating in event-guild:
 					add "%nl%🔄 `Looping`" to {_l::*}
 				set description of embed to join {_l::*} with nl
-			send last embed to event-channel
-			clear {_42why::*}
-			set {_duration} to track duration of {_current}
-			send "duration: %{_duration}%" to event-channel
-			send "time in: %{tracktime}%" to event-channel
+			send "%{_timeleft}%" to event-channel
 			exit
 
 on track end seen by "Gigavibe":
@@ -269,6 +290,7 @@ discord command queue:
 	aliases: q
 	executable in: guild
 	trigger:
+		clear {finaltime}
 		set {queue::*} to queue of event-guild
 		set {_current} to the track the bot is playing in the event-guild
 		if {_current} is not set:
@@ -278,11 +300,57 @@ discord command queue:
 			send last embed to event-channel
 			exit
 		else:
-			set {_totaltime} to track duration of {_current}
+			if {_current} is set:
+				set {_totaltime} to track duration of {_current}
+				set {_test} to "%{_totaltime}%" parsed as timespan
+				set {_test} to "%{_test}%"
+				replace all " seconds" or " second" with "" in {_test}
+				replace all " minutes" or " minute" with "" in {_test}
+				replace all " hours" or " hour" with "" in {_test}
+				replace all " and" with "" in {_test}
+				set {_timesplit::*} to "%{_test}%" split at " "
+				if {_timesplit::3} is set:
+					set {finaltime} to {timesplit::1} * 3600
+					add {_timesplit::2} * 60 to {finaltime}
+					add {_timesplit::3} to {finaltime}
+				if {_timesplit::3} is not set:
+					if {_timesplit::2} is set:
+						set {_timesplit::1} to {_timesplit::1} parsed as number
+						add {_timesplit::1} * 60 to {finaltime}
+						add {_timesplit::2} parsed as number to {finaltime}
+				if {_timesplit::3} is not set:
+					if {_timesplit::2} is not set:
+						if {_timesplit::1} is set:
+							add {_timesplit::1} parsed as number to {finaltime}
+			if {queue::*} is set:
+				loop {queue::*}:
+					set {_totaltime} to track duration of loop-value
+					set {_test} to "%{_totaltime}%" parsed as timespan
+					set {_test} to "%{_test}%"
+					replace all " seconds" or " second" with "" in {_test}
+					replace all " minutes" or " minute" with "" in {_test}
+					replace all " hours" or " hour" with "" in {_test}
+					replace all " and" with "" in {_test}
+					set {_timesplit::*} to "%{_test}%" split at " "
+					if {_timesplit::3} is set:
+						set {finaltime} to {timesplit::1} * 3600
+						add {_timesplit::2} * 60 to {finaltime}
+						add {_timesplit::3} to {finaltime}
+					if {_timesplit::3} is not set:
+						if {_timesplit::2} is set:
+							set {_timesplit::1} to {_timesplit::1} parsed as number
+							add {_timesplit::1} * 60 to {finaltime}
+							add {_timesplit::2} parsed as number to {finaltime}
+					if {_timesplit::3} is not set:
+						if {_timesplit::2} is not set:
+							if {_timesplit::1} is set:
+								add {_timesplit::1} parsed as number to {finaltime}
+			set {finaltime} to "%{finaltime}% seconds" parsed as timespan
+			set {finaltime} to "%{finaltime}%"
 			clear {_B::*}
 			make embed:
 				set color of embed to color from rgb 32, 34, 37
-				set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+				set footer of embed to "Queue length: %{finaltime}%"
 				set {_B::1} to "📝 `Queue`%nl%"
 				set {_B::2} to "`Now playing:` [**%{_current}%**](%track url of {_current}%)"
 				set {_B::3} to "2.[%{queue::1}%](%track url of {queue::1}%)"
@@ -291,8 +359,8 @@ discord command queue:
 				set {_B::6} to "5.[%{queue::4}%](%track url of {queue::4}%)"
 				set description of embed to join {_B::*} with nl
 			send last embed to event-channel
+			clear {finaltime}
 			wait 1 seconds
-			clear {_B::*}
 			exit
 
 discord command reload:
@@ -683,7 +751,7 @@ discord command tts <text>:
 				set line 1 in file "%{_path}%/PyTTS.pyw" to "text = '''%arg-1%'''" # is os expression is broken so no checks :(
 				set line 1 in file "plugins/TTS.bat" to "start %{_path}%/PyTTS"
 				set line 1 in file "plugins/TTS.sh" to "cd %{_path}%"
-				set line 2 in file "plugins/TTS.sh" to "python3 PyTTS"
+				set line 2 in file "plugins/TTS.sh" to "python3 PyTTS.pyw"
 				run batch cmd "plugins/TTS.bat"
 				run sh cmd "plugins/TTS.sh"
 				wait 1 second
