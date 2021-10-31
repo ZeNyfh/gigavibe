@@ -8,7 +8,7 @@
 
 > python 3.x 
 > (3.8 or 3.9 recommended)
-(not needed TTS is disabled for now)
+not needed, TTS is disabled for now
 
 > A minecraft server running bukkit/spigot/paper
 > (paper recommended)
@@ -24,5 +24,4 @@ helplog.txt
 djlog.txt
 adminlog.txt
 generallog.txt
-(these will be in a zip file once updated)
-
+(these will all be in a zip file once updated)
