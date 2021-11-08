@@ -1,7 +1,14 @@
 **Syntax**
 `<>` is a required argument, [] is an optional argument
+`These will all require the DJ role or are uncommon commands`
 
 **Commands**
 `dj <@role/list>` - Sets a role as a DJ or shows which roles have DJ.
+`djclear/cleardj` - Removes all roles from DJ.
 `ping` - Shows the bots ping.
 `forceskip/fs` - Force skips a song
+`forceskipall/fsall/clear queue` - Clears the queue (skips all songs)
+`leave` - Clears the queue and makes the bot leave
+`blacklist <@user>` - If a user has a DJ role, they can have their privelleges revoked with this.
+`whitelist <@user>` -  Removes a user from the DJ blacklist.
+`clearblacklist/blacklistclear` - Removes all users from the DJ blacklist.

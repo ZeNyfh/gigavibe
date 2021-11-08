@@ -141,17 +141,6 @@ discord command np:
 			clear {tracktime}
 			exit
 
-discord command debug:
-	prefixes: !
-	executable in: guild
-	trigger:
-		loop 20 times:
-			add "▬" to {_b::*}
-			replace all " " with "" in {_b::*}
-			replace all "," with "" in {_b::*}
-			replace all "and" with "" in {_b::*}
-		send "%{_b::*}%" to event-channel
-
 on track end seen by "Gigavibe":
 	set {_members::*} to members in the voice channel of event-bot in event-guild
 	loop {members::*}:
@@ -234,6 +223,12 @@ discord command forceskipall:
 	prefixes: !
 	executable in: guild
 	trigger:
+		if {blockeddj::*} contains discord id of event-member:
+			make embed:
+				set description of embed to "❌ `Insufficient permissions.`"
+				set color of embed to color from rgb 32, 34, 37
+				send last embed to event-channel
+				exit
 		if voice channel of event-bot in event-guild is not set:
 			make embed:
 				set description of embed to "❌ `I am not in a voice channel.`"
@@ -272,6 +267,12 @@ discord command forceskip:
 	prefixes: !
 	executable in: guild
 	trigger:
+		if {blockeddj::*} contains discord id of event-member:
+			make embed:
+				set description of embed to "❌ `Insufficient permissions.`"
+				set color of embed to color from rgb 32, 34, 37
+				send last embed to event-channel
+				exit
 		if voice channel of event-bot in event-guild is not set:
 			make embed:
 				set description of embed to "❌ `I am not in a voice channel.`"
@@ -310,6 +311,12 @@ discord command leave:
 	prefixes: !
 	executable in: guild
 	trigger:
+		if {blockeddj::*} contains discord id of event-member:
+			make embed:
+				set description of embed to "❌ `Insufficient permissions.`"
+				set color of embed to color from rgb 32, 34, 37
+				send last embed to event-channel
+				exit
 		if voice channel of event-bot in event-guild is not set:
 			make embed:
 				set description of embed to "❌ `I am not in a voice channel.`"
@@ -542,31 +549,38 @@ discord command clear queue:
 	prefixes: !
 	executable in: guild
 	trigger:
-		set {_test} to event-member
-		add "zenyfhwashere" to {dj::*}
-		loop {dj::*}:
-			set {_role} to loop-value parsed as role
-			if {_test} has role {_role}:
-				clear {track::*}
-				clear {queue::*}
-				clear queue of event-guild
-				stop queue of event-guild
-				set {_tracks::*} to {_queue::*}
-				remove "zenyfhwashere" from {dj::*}
-				make embed:
-					set color of embed to color from rgb 32, 34, 37
-					set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
-					set description of embed to "✅ `Cleared the queue`"
+		if {blockeddj::*} contains discord id of event-member:
+			make embed:
+				set description of embed to "❌ `Insufficient permissions.`"
+				set color of embed to color from rgb 32, 34, 37
 				send last embed to event-channel
 				exit
-			else:
-				continue
-		remove "zenyfhwashere" from {dj::*}
-		make embed:
-			set description of embed to "❌ `Insufficient permissions.`"
-			set color of embed to color from rgb 32, 34, 37
-		send last embed to event-channel
-		exit
+		else:
+			set {_test} to event-member
+			add "zenyfhwashere" to {dj::*}
+			loop {dj::*}:
+				set {_role} to loop-value parsed as role
+				if {_test} has role {_role}:
+					clear {track::*}
+					clear {queue::*}
+					clear queue of event-guild
+					stop queue of event-guild
+					set {_tracks::*} to {_queue::*}
+					remove "zenyfhwashere" from {dj::*}
+					make embed:
+						set color of embed to color from rgb 32, 34, 37
+						set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+						set description of embed to "✅ `Cleared the queue`"
+					send last embed to event-channel
+					exit
+				else:
+					continue
+			remove "zenyfhwashere" from {dj::*}
+			make embed:
+				set description of embed to "❌ `Insufficient permissions.`"
+				set color of embed to color from rgb 32, 34, 37
+			send last embed to event-channel
+			exit
 
 discord command whitelist <text>:
 	prefixes: !
@@ -609,7 +623,7 @@ discord command whitelist <text>:
 					exit
 
 discord command clearblacklist:
-	aliases: blaclistclear
+	aliases: blacklistclear
 	prefixes: !
 	executable in: guild
 	trigger:
@@ -753,6 +767,7 @@ on load:
 
 discord command djclear:
 	prefixes: !
+	aliases: cleardj
 	executable in: guild
 	trigger:
 		if {blockeddj::*} contains discord id of event-member:
@@ -810,53 +825,6 @@ discord command djlist:
 			set color of embed to color from rgb 32, 34, 37
 		send last embed to event-channel
 		exit
-
-#discord command tts <text>:
-#	prefixes: !
-#	executable in: guild
-#	trigger:
-#		if {check} is set:
-#			send "The bot is already talking, try again soon." to event-channel
-#			exit
-#		else:
-#			set {_vc} to voice channel of event-member
-#			set {check} to true
-#			set {_limiter} to arg 1
-#			if length of {_limiter} > 500:
-#				send "The character limit is 500" to event-channel
-#				exit
-#			if arg-1 contains "'''":
-#				clear {check}
-#				send "illegal character: **'''**, not sending message" to event-channel
-#				exit
-#			if {_vc} is not set:
-#				send "get in a voice channel before using tts." to event-channel
-#				clear {check}
-#				exit
-#			else:
-#				set {_path} to absolute path of "plugins"
-#				set line 1 in file "plugins/PyTTS.pyw" to "text = '''%arg-1%'''" # is os expression is broken so no checks :(
-#				set line 1 in file "plugins/TTS.bat" to "start %{_path}%\PyTTS.pyw"
-#				set line 1 in file "plugins/TTS.sh" to "cd %{_path}%"
-#				set line 2 in file "plugins/TTS.sh" to "python3 PyTTS.pyw"
-#				run batch cmd "plugins/TTS.bat"
-#				run sh cmd "plugins/TTS.sh"
-#				wait 1 second
-#				load locale track from "plugins/TTS.mp3" and store it in {_temptrack}
-#				set {_vc} to voice channel of event-member
-#				if {_vc} is not set:
-#					send "get in a voice channel before using tts." to event-channel
-#					clear {check}
-#					exit
-#				else:
-#					connect event-bot to voice channel of event-member
-#					play {_temptrack} in event-guild
-#					wait 3 second
-#					delete file "plugins/TTS.mp3"
-#					clear {_temptrack}
-#					clear {_test}
-#					clear {check}
-#					exit
 
 on track end seen by "Gigavibe":
 	wait 60 seconds

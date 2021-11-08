@@ -2,6 +2,6 @@ Click the buttons to get more information on a group
 **general**
 `help` `github`
 **audio**
-`play` `skip` `np` `tts` `forceskip` `queue` `clear queue`
+`play` `skip` `np` `forceskip` `queue` `clear queue` `loop`
 **admin**
 `ping` `dj` `blacklist` `whitelist` `leave`

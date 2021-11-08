@@ -5,8 +5,9 @@
 `play <text/url>` - Plays a track from youtube.
 `skip` - Casts a vote to skip the current song.
 `np` - Shows what song is now playing.
-`tts <text>` - Makes the bot say something. (won't work if there is music playing)
 `queue/q`- Sends the current music queue.
+`loop` - Loops the current song.
+`unloop` - Unloops the current song.
 `clear queue` - Clears the music queue. (DJ only)
 `forceskip/fs` - Skips a song forcibly. (DJ only)
 
