@@ -122,7 +122,6 @@ discord command np:
 			if {_test} contains " and":
 				replace all " and" with "" in {_test}
 			set {_timesplit::*} to "%{_test}%" split at " "
-			send "%{_test1}%" to event-channel
 			if {_timesplit::3} is set:
 				set {totaltime} to {_timesplit::1} * 3600
 				add {_timesplit::2} * 60 to {totaltime}
@@ -148,7 +147,6 @@ discord command np:
 						add {_timesplit::1} parsed as number to {totaltime}
 			set {_timeleft} to {totaltime} - {tracktime} 
 			set {_location} to 20-round( ({totaltime}-{tracktime})/{totaltime} * 20)
-			send "location %{_location}%" to event-channel
 			if {_location} > 0:
 				send "**an error has occurred**, make an issue mentioning that ""location is less than 0"" while making sure to state what steps you took to get this error and sending the link to the track"
 			if {_location} < 20.5:
