@@ -14,14 +14,6 @@ not needed, TTS is disabled for now
 > (paper recommended)
 
 # Installation
-> Unzip plugins.zip into your plugins folder.
+> Move everything in the plugins folder into your minecraft server plugin folder
 
-> Place all of these into your plugins folder:
-TTS.sh
-TTS.bat
-PyTTS.pyw
-helplog.txt
-djlog.txt
-adminlog.txt
-generallog.txt
-(these will all be in a zip file once updated)
+> Move the .sk files into "plugins/skript/scripts/"
