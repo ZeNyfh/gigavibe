@@ -148,9 +148,9 @@ discord command np:
 			set {_timeleft} to {totaltime} - {tracktime} 
 			set {_location} to 20-round( ({totaltime}-{tracktime})/{totaltime} * 20)
 			if {_location} > 0:
-				send "**an error has occurred**, make an issue mentioning that ""location is less than 0"" while making sure to state what steps you took to get this error and sending the link to the track"
+				send "**an error has occurred**, location is greater than 0 on this track. https://www.github.com/ZeNyfh/gigavibe" to event-channel
 			if {_location} < 20.5:
-				send "an error has occurred, make an issue mentioning that ""location is greater than 0"" while making sure to state what steps you took to get this error and sending the link to the track"
+				send "**an error has occurred**, location is greater than 20.5 on this track. https://www.github.com/ZeNyfh/gigavibe" to event-channel
 			if {_location} is 0:
 				set {_line} to "🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
 			if {_location} is 1:
