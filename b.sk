@@ -146,9 +146,13 @@ discord command np:
 				if {_timesplit::2} is not set:
 					if {_timesplit::1} is set:
 						add {_timesplit::1} parsed as number to {totaltime}
-			set {_timeleft} to {totaltime} - {tracktime}
+			set {_timeleft} to {totaltime} - {tracktime} 
 			set {_location} to 20-round( ({totaltime}-{tracktime})/{totaltime} * 20)
 			send "location %{_location}%" to event-channel
+			if {_location} > 0:
+				send "**an error has occurred**, make an issue mentioning that ""location is less than 0"" while making sure to state what steps you took to get this error and sending the link to the track"
+			if {_location} < 20.5:
+				send "an error has occurred, make an issue mentioning that ""location is greater than 0"" while making sure to state what steps you took to get this error and sending the link to the track"
 			if {_location} is 0:
 				set {_line} to "🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
 			if {_location} is 1:
