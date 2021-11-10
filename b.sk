@@ -145,12 +145,13 @@ discord command np:
 				if {_timesplit::2} is not set:
 					if {_timesplit::1} is set:
 						add {_timesplit::1} parsed as number to {totaltime}
-			set {_timeleft} to {totaltime} - {tracktime} 
+			set {_timeleft} to {totaltime} - {tracktime}
 			set {_location} to 20-round( ({totaltime}-{tracktime})/{totaltime} * 20)
-			if {_location} > 0:
-				send "**an error has occurred**, location is greater than 0 on this track. https://www.github.com/ZeNyfh/gigavibe" to event-channel
-			if {_location} < 20.5:
-				send "**an error has occurred**, location is greater than 20.5 on this track. https://www.github.com/ZeNyfh/gigavibe" to event-channel
+			if {_location} < 0:
+				send "**an error has occurred**, location is less than 0 on this track. Report this here: https://www.github.com/ZeNyfh/gigavibe/issues" to event-channel
+				exit
+			if {_location} > 20.5:
+				set {_line} to "🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
 			if {_location} is 0:
 				set {_line} to "🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
 			if {_location} is 1:
@@ -213,6 +214,8 @@ discord command np:
 			exit
 
 on track end seen by "Gigavibe":
+	clear {totaltime}
+	clear {tracktime}
 	set {_members::*} to members in the voice channel of event-bot in event-guild
 	loop {members::*}:
 		if loop-value is a discord bot:
@@ -375,7 +378,7 @@ discord command forceskip:
 					send last embed to event-channel
 					wait 1 second
 					play {track::1} in event-guild
-					set {unixtime} to unix timestamp of now#
+					set {unixtime} to unix timestamp of now
 					clear {votecount}
 					wait 60 seconds
 					if the bot is playing in the event-guild: # this is backwards
@@ -421,7 +424,6 @@ discord command leave:
 						make embed:
 							set description of embed to ":mailbox_with_no_mail: `Successfully disconnected.`"
 							set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
-							#set footer icon of embed to avatar of event-member
 							set color of embed to color from rgb 32, 34, 37
 						send last embed to event-channel
 						disconnect bot of event-guild
@@ -933,9 +935,15 @@ discord command djlist:
 			set description of embed to "❌ `Insufficient permissions.`"
 			set color of embed to color from rgb 32, 34, 37
 		send last embed to event-channel
-		exit
+		exit 
 
+on track start seen by "Gigavibe":
+	set {unixtime} to unix timestamp of now
+	exit
+	
 on track end seen by "Gigavibe":
+	clear {tracktime}
+	clear {totaltime}
 	wait 60 seconds
 	clear {tracktime}
 	clear {totaltime}
@@ -983,6 +991,11 @@ discord command ping:
 		subtract {_unixtime} from {_unixtime2}
 		send "ping: %{_unixtime2}*1000%ms" to event-channel
 		exit
+
+command /uptime:
+	trigger:
+		set {_uptime} to uptime of bot named "Gigavibe"
+		send "%{_uptime}%" to console
 
 command /startgiga:
 	trigger:
