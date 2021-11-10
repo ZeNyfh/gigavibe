@@ -1,5 +1,5 @@
 **Syntax**
-`<>` is a required argument, [] is an optional argument
+`<>` is a required argument, `[]` is an optional argument
 
 **Commands**
 `help` - How else did you get here?

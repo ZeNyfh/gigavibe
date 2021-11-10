@@ -1,5 +1,5 @@
 discord command play [<string>]:
-	prefixes: !
+	prefixes: ?
 	aliases: p, youtube
 	executable in: guild
 	trigger:
@@ -94,7 +94,7 @@ on bot leave:
 
 discord command np:
 	aliases: nowplaying
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		set {_current} to the track the bot is playing in the event-guild
@@ -232,7 +232,7 @@ on load:
 
 discord command voteskip:
 	aliases: skip
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		set {_a} to channel of event-member in event-guild
@@ -295,7 +295,7 @@ discord command voteskip:
 
 discord command forceskipall:
 	aliases: fsall
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		if {blockeddj::*} contains discord id of event-member:
@@ -344,7 +344,7 @@ discord command forceskipall:
 
 discord command forceskip:
 	aliases: fs
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		if {blockeddj::*} contains discord id of event-member:
@@ -394,7 +394,7 @@ discord command forceskip:
 			exit
 
 discord command leave:
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		if {blockeddj::*} contains discord id of event-member:
@@ -447,7 +447,7 @@ discord command leave:
 			exit
 
 discord command queue:
-	prefixes: !
+	prefixes: ?
 	aliases: q
 	executable in: guild
 	trigger:
@@ -525,10 +525,10 @@ discord command queue:
 				set footer of embed to "Queue length: %{finaltime}%"
 				set {_B::1} to "📝 `Queue`%nl%"
 				set {_B::2} to "`Now playing:` [**%{_current}%**](%track url of {_current}%)"
-				set {_B::3} to "2.[%{queue::1}%](%track url of {queue::1}%)"
-				set {_B::4} to "3.[%{queue::2}%](%track url of {queue::2}%)"
-				set {_B::5} to "4.[%{queue::3}%](%track url of {queue::3}%)"
-				set {_B::6} to "5.[%{queue::4}%](%track url of {queue::4}%)"
+				set {_B::3} to "2. [%{queue::1}%](%track url of {queue::1}%)"
+				set {_B::4} to "3. [%{queue::2}%](%track url of {queue::2}%)"
+				set {_B::5} to "4. [%{queue::3}%](%track url of {queue::3}%)"
+				set {_B::6} to "5. [%{queue::4}%](%track url of {queue::4}%)"
 				set description of embed to join {_B::*} with nl
 			send last embed to event-channel
 			clear {finaltime}
@@ -536,7 +536,7 @@ discord command queue:
 			exit
 
 discord command reload:
-	prefixes: !
+	prefixes: ?
 	trigger:
 		if discord id of event-member is "211789389401948160":
 			send "Successfully reloaded." to event-channel
@@ -545,7 +545,7 @@ discord command reload:
 
 discord command help:
 	aliases: cmds
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		set {_loop} to true
@@ -568,7 +568,7 @@ discord command help:
 				add row {_row} to {helpembed}
 
 discord command github:
-	prefixes: !
+	prefixes: ?
 	aliases: bug
 	executable in: guild
 	trigger:
@@ -646,7 +646,7 @@ on button click:
 
 discord command clear queue:
 	aliases: queue clear, clearqueue, queueclear
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		if {blockeddj::*} contains discord id of event-member:
@@ -686,7 +686,7 @@ discord command clear queue:
 			exit
 
 discord command whitelist <text>:
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		if event-member does not have permission message manage:
@@ -728,7 +728,7 @@ discord command whitelist <text>:
 
 discord command clearblacklist:
 	aliases: blacklistclear
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		if event-member has permission message manage:
@@ -748,7 +748,7 @@ discord command clearblacklist:
 discord command loop:
 	executable in: guild
 	aliases: unloop
-	prefixes: !
+	prefixes: ?
 	trigger:
 		if {blockeddj::*} contains discord id of event-member:
 			make embed:
@@ -790,7 +790,7 @@ discord command loop:
 			exit
 
 discord command blacklist [<text>]:
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		if event-member does not have permission message manage:
@@ -813,7 +813,7 @@ discord command blacklist [<text>]:
 			exit
 
 discord command dj [<text>]:
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		if {blockeddj::*} contains discord id of event-member:
@@ -877,7 +877,7 @@ on load:
 	exit
 
 discord command djclear:
-	prefixes: !
+	prefixes: ?
 	aliases: cleardj
 	executable in: guild
 	trigger:
@@ -902,7 +902,7 @@ discord command djclear:
 		exit
 
 discord command djlist:
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		remove all "zenyfhwashere" from {dj::*}
@@ -981,7 +981,7 @@ on track end seen by "Trollvibe":
 		exit
 
 discord command ping:
-	prefixes: !
+	prefixes: ?
 	executable in: guild
 	trigger:
 		set {_unixtime} to unix timestamp of now
@@ -997,7 +997,7 @@ command /uptime:
 		set {_uptime} to uptime of bot named "Trollvibe"
 		send "%{_uptime}%" to console
 
-command /startgiga:
+command /starttroll:
 	trigger:
 		if "Trollvibe" is loaded:
 			send "This will have catastrophic results, no." to console

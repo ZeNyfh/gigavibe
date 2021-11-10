@@ -1,5 +1,5 @@
 **Syntax**
-`<>` is a required argument, [] is an optional argument
+`<>` is a required argument, `[]` is an optional argument
 `These will all require the DJ role or are uncommon commands`
 
 **Commands**

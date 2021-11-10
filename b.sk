@@ -525,10 +525,10 @@ discord command queue:
 				set footer of embed to "Queue length: %{finaltime}%"
 				set {_B::1} to "📝 `Queue`%nl%"
 				set {_B::2} to "`Now playing:` [**%{_current}%**](%track url of {_current}%)"
-				set {_B::3} to "2.[%{queue::1}%](%track url of {queue::1}%)"
-				set {_B::4} to "3.[%{queue::2}%](%track url of {queue::2}%)"
-				set {_B::5} to "4.[%{queue::3}%](%track url of {queue::3}%)"
-				set {_B::6} to "5.[%{queue::4}%](%track url of {queue::4}%)"
+				set {_B::3} to "2. [%{queue::1}%](%track url of {queue::1}%)"
+				set {_B::4} to "3. [%{queue::2}%](%track url of {queue::2}%)"
+				set {_B::5} to "4. [%{queue::3}%](%track url of {queue::3}%)"
+				set {_B::6} to "5. [%{queue::4}%](%track url of {queue::4}%)"
 				set description of embed to join {_B::*} with nl
 			send last embed to event-channel
 			clear {finaltime}
