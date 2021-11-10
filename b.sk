@@ -999,6 +999,7 @@ command /uptime:
 
 command /startgiga:
 	trigger:
+		set presence of bot "Gigavibe" to playing "!help"
 		if "Gigavibe" is loaded:
 			send "This will have catastrophic results, no." to console
 			exit

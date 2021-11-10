@@ -999,6 +999,7 @@ command /uptime:
 
 command /starttroll:
 	trigger:
+		set presence of bot "Trollvibe" to playing "?help"
 		if "Trollvibe" is loaded:
 			send "This will have catastrophic results, no." to console
 			exit
