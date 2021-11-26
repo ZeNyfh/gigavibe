@@ -763,7 +763,7 @@ discord command djclear:
 			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
 			exit
 		make embed:
-			set color of embed to dark grey #Why the change? -9382
+			set color of embed to color from rgb 32, 34, 37
 			set footer of embed to "Executed by %discord name of event-user%##%discord tag of event-member%"
 			set title of embed to "✅ `Cleared all DJs`"
 		clear {dj::*}
