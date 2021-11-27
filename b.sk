@@ -131,77 +131,41 @@ discord command np:
 					add {_timesplit::1} * 3600 to {totaltime}
 					set {_timesplit::2} to {_timesplit::2} parsed as number
 					add {_timesplit::2} * 60 to {totaltime}
-		if {_timesplit::3} is not set:
-			if {_timesplit::2} is not set:
-				if {_timesplit::1} is set:
-					add {_timesplit::1} parsed as number to {totaltime}
-		set {_timeleft} to {totaltime} - {tracktime}
-		set {_location} to 20-round( ({totaltime}-{tracktime})/{totaltime} * 20)
-		if {_location} < 0:
-			send "**an error has occurred**, location is less than 0 on this track. Report this here: https://www.github.com/ZeNyfh/gigavibe/issues" to event-channel
+			if {_timesplit::3} is not set:
+				if {_timesplit::2} is not set:
+					if {_timesplit::1} is set:
+						add {_timesplit::1} parsed as number to {totaltime}
+			set {_timeleft} to {totaltime} - {tracktime}
+			set {_location} to 20-round( ({totaltime}-{tracktime})/{totaltime} * 20)
+			if {_location} < 0:
+				send "**an error has occurred**, location is less than 0 on this track. Report this here: https://www.github.com/ZeNyfh/gigavibe/issues" to event-channel
+				exit
+			set {_line} to "0▬1▬2▬3▬4▬5▬6▬7▬8▬9▬10▬11▬12▬13▬14▬15▬16▬17▬18▬19▬20"
+			set {_linesplit::*} to {_line} split at "%{_location}%"
+			set {_line} to "%{_linesplit::1}%🔘%{_linesplit::2}%"
+			clear {_linesplit::1} and {_linesplit::2}
+			set {_temp} to concatenate {_linesplit::*}
+			set {_line} to "%{_line}%%{_temp}%"
+			replace every "0" and "1" and "2" and "3" and "4" and "5" and "6" and "7" and "8" and "9" with "" in {_line}
+			replace every "<none>" with "" in {_line}
+				make embed:
+				set title of embed to "%{_current}%"
+				set title url of embed to track url of {_current}
+				set color of embed to color from rgb 32, 34, 37
+				set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+				set thumbnail of embed to track thumbnail of {track::1}
+				add "%nl%%nl%`%{_line}%`%nl%" to {_l::*}
+				set {_tracktime} to "%{tracktime}% seconds" parsed as timespan
+				set {_tracktime} to {_tracktime} 
+				add "Duration: `%{_tracktime}% / %track duration of {_current}%`%nl%" to {_l::*}
+				add "Channel: `%track author of {_current}%`" to {_l::*}
+				if bot is repeating in event-guild:
+					add "%nl%🔄 `Looping`" to {_l::*}
+				set description of embed to join {_l::*} with nl
+			send last embed to event-channel
+			clear {tracktime}
+			clear {totaltime}
 			exit
-		if {_location} > 20.5:
-			set {_line} to "🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
-		if {_location} is 0:
-			set {_line} to "🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
-		if {_location} is 1:
-			set {_line} to "▬🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
-		if {_location} is 2:
-			set {_line} to "▬▬🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
-		if {_location} is 3:
-			set {_line} to "▬▬▬🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
-		if {_location} is 4:
-			set {_line} to "▬▬▬▬🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
-		if {_location} is 5:
-			set {_line} to "▬▬▬▬▬🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
-		if {_location} is 6:
-			set {_line} to "▬▬▬▬▬▬🔘▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
-		if {_location} is 7:
-			set {_line} to "▬▬▬▬▬▬▬🔘▬▬▬▬▬▬▬▬▬▬▬▬▬"
-		if {_location} is 8:
-			set {_line} to "▬▬▬▬▬▬▬▬🔘▬▬▬▬▬▬▬▬▬▬▬▬"
-		if {_location} is 9:
-			set {_line} to "▬▬▬▬▬▬▬▬▬🔘▬▬▬▬▬▬▬▬▬▬▬"
-		if {_location} is 10:
-			set {_line} to "▬▬▬▬▬▬▬▬▬▬🔘▬▬▬▬▬▬▬▬▬▬"
-		if {_location} is 11:
-			set {_line} to "▬▬▬▬▬▬▬▬▬▬▬🔘▬▬▬▬▬▬▬▬▬"
-		if {_location} is 12:
-			set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬🔘▬▬▬▬▬▬▬▬"
-		if {_location} is 13:
-			set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬▬🔘▬▬▬▬▬▬▬"
-		if {_location} is 14:
-			set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬▬▬🔘▬▬▬▬▬▬"
-		if {_location} is 15:
-			set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬🔘▬▬▬▬▬"
-		if {_location} is 16:
-			set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬🔘▬▬▬▬"
-		if {_location} is 17:
-			set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬🔘▬▬▬"
-		if {_location} is 18:
-			set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬🔘▬▬"
-		if {_location} is 19:
-			set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬🔘▬"
-		if {_location} is 20:
-			set {_line} to "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬🔘" # there was no other way to do this, i hate skript
-		make embed:
-			set title of embed to "%{_current}%"
-			set title url of embed to track url of {_current}
-			set color of embed to color from rgb 32, 34, 37
-			set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
-			set thumbnail of embed to track thumbnail of {track::1}
-			add "%nl%%nl%`%{_line}%`%nl%" to {_l::*}
-			set {_tracktime} to "%{tracktime}% seconds" parsed as timespan
-			set {_tracktime} to {_tracktime} 
-			add "Duration: `%{_tracktime}% / %track duration of {_current}%`%nl%" to {_l::*}
-			add "Channel: `%track author of {_current}%`" to {_l::*}
-			if bot is repeating in event-guild:
-				add "%nl%🔄 `Looping`" to {_l::*}
-			set description of embed to join {_l::*} with nl
-		send last embed to event-channel
-		clear {tracktime}
-		clear {totaltime}
-		exit
 
 on track end seen by "Gigavibe":
 	clear {totaltime}
