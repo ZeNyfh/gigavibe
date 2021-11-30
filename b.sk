@@ -148,7 +148,7 @@ discord command np:
 			set {_line} to "%{_line}%%{_temp}%"
 			replace every "0" and "1" and "2" and "3" and "4" and "5" and "6" and "7" and "8" and "9" with "" in {_line}
 			replace every "<none>" with "" in {_line}
-				make embed:
+			make embed:
 				set title of embed to "%{_current}%"
 				set title url of embed to track url of {_current}
 				set color of embed to color from rgb 32, 34, 37
