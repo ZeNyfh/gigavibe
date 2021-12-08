@@ -1,545 +1,832 @@
-﻿options:
-	gigacolour: skript color from hex "202225"
-	trollcolour: skript color from hex "dcdcdc"
-	zencolour: skript color from hex "001996"
-	bot: testzen-bot
-
-function toSeconds(timespan: timespan) :: number:
-	set {_totaltime} to {_timespan}
-	set {_totaltime} to "%{_totaltime}%" # have to set it to its self, it wont edit otherwise
-	replace all "days" and "day" with "* 86400" in {_totaltime}
-	replace all "hours" and "hour" with "* 3600" in {_totaltime} # checks for plural to not end up with "1s * 3600" or something similar
-	replace all "minutes" and "minute" with "* 60" in {_totaltime}
-	replace all "seconds" and "second" with "" in {_totaltime}
-	replace all "and " and ", " with "+ " in {_totaltime}
-	set {_totaltime} to evaluate expr "%{_totaltime}%"
-	return {_totaltime} # if used within a loop, be sure to add the result to a variable
-
-function AND(conditions: booleans) :: boolean:
-	if {_conditions::*} contains false:
-		return false
-	return true
-	
-function OR(conditions: booleans) :: boolean:
-	if {_conditions::*} contains true:
-		return true
-	return false
-
-function createQuickEmbed(title:string,description:string) :: embedbuilder:
+function createQuickEmbed(title:string,description:string) :: embed:
 	if {_title} is not "":
 		make embed:
 			set title of embed to {_title}
 			set description of embed to {_description}
-			set color of embed to {@zencolour}
+			set color of embed to color from rgb 32, 34, 37
 	else: #Inefficient but idk, i dont do skript -9382
 		make embed:
 			set description of embed to {_description}
-			set color of embed to {@zencolour}
+			set color of embed to color from rgb 32, 34, 37
 	return last embed
-
-function helpMessage(string: string, u: user, g: guild) :: embedbuilder:
-	set {_guild} to {_g}
-	set {_g} to discord id of {_g}
-	make embed:
-		add "**Syntax**%nl%`<>` is a required argument, `[]` is an optional argument%nl%" to {_embed::*}
-		loop all discord command:
-			if {_string} contains discord command category of loop-value:
-				add "**`&%loop-value%`** - %description of loop-value%" to {_embed::*}
-			if size of {_embed::*} != 0:
-				set color of embed to {@zencolour}
-				set description of embed to join {_embed::*} with nl
-				set title of embed to "%{_string}%"
-				set thumbnail of embed to avatar of self member of bot named "%{_bot}%" in {_guild}
-			else:
-				set {_categories::*} to category of loop-value
-				set color of embed to {@zencolour}
-	return last embed
-
-import:
-	ch.njol.skript.log.SkriptLogger
-
-discord command help [<string>]:
-	prefixes: &
-	category: general
-	aliases: cmds
-	description: Explains commands and their usage.
-	executable in: guild
-	trigger:
-		loop all discord command:
-			if "general" contains discord command category of loop-value:
-				add "`%loop-value%`" to {_general::*}
-				replace every "and " and "," in {_general::*} with "" 
-			if "music" contains discord command category of loop-value:
-				add "`%loop-value%`" to {_music::*}
-				replace every "and " and "," in {_music::*} with "" 
-			if "dj" contains discord command category of loop-value:
-				add "`%loop-value%`" to {_dj::*}
-				replace every "and " and "," in {_dj::*} with "" 
-		make embed:
-			set title of embed to "📔 `Commands`"
-			add "Click the buttons to get more information on a group.%nl%" to {_l::*}
-			add "**General**" to {_l::*}
-			add "%{_general::*}%%nl%" to {_l::*}
-			add "**Music**" to {_l::*}
-			add "%{_music::*}%%nl%" to {_l::*}
-			add "**DJ**" to {_l::*}
-			add "%{_dj::*}%%nl%" to {_l::*}
-			replace every "and " and "," in {_l::*} with ""
-			set description of embed to join {_l::*} with nl
-		send last embed to event-channel and store it in {embed}
-		set {_row} to new buttons row
-		add new button with id "general" with style secondary with content "General" to buttons of {_row}
-		add new button with id "music" with style secondary with content "Music" to buttons of {_row}
-		add new button with id "dj" with style secondary with content "DJ" to buttons of {_row}
-		add row {_row} to message {embed}
-
-on button click:
-	if event-button is "general":
-		edit {embed} to show helpMessage("📖 General", event-user, event-guild) and keep buttons
-		defer the interaction
-	if event-button is "music":
-		edit {embed} to show helpMessage("🔊 Music", event-user, event-guild) and keep buttons
-		defer the interaction
-	if event-button is "dj":
-		edit {embed} to show helpMessage("🎧 DJ", event-user, event-guild) and keep buttons
-		defer the interaction
 
 discord command play [<string>]:
-	prefixes: &
-	category: music
+	prefixes: !
 	aliases: p, youtube
-	description: Plays songs or playlists from youtube.
 	executable in: guild
 	trigger:
-		clear {ratelimit}
 		if {ratelimit} is set:
-			clear {ratelimit}
 			send createQuickEmbed("","❌ `You are doing this command too quickly!`") to event-channel
-			wait 0.2 seconds
 			clear {ratelimit}
 			exit
 		set {ratelimit} to 1
 		if arg 1 is not set:
-			clear {ratelimit}
 			send createQuickEmbed("","❌ `You need to specify a URL or a Youtube search term.`") to event-channel
-			wait 0.2 seconds
 			clear {ratelimit}
 			exit
-		set {_a} to voice channel of event-member in event-guild
+		set {_a} to channel of event-member in event-guild
 		if {_a} is not set:
-			clear {ratelimit}
 			send createQuickEmbed("","❌ `You need to be in a voice channel to use this command.`") to event-channel
-			wait 0.2 seconds
 			clear {ratelimit}
 			exit
 		if arg-1 contains "http" or "https":
-			if arg-1 does not contain "www.youtube.com/watch?v=" or "https://youtu.be/" or "http://youtu.be/":
-				send createQuickEmbed("","❌ `Not a youtube link.`") to event-channel
-				exit
-			else:
-				clear {ratelimit}
+			if arg-1 contains "www.youtube.com/watch?v=" or "https://youtu.be/":
 				connect event-bot to voice channel of event-member
 				search in youtube for arg-1 and store it in {_searchresult::*}
 				add {_searchresult::1} to {track::*}
-				if {_searchresult::1} is not set:
+				if {track::1} is not set:
 					send createQuickEmbed("","❌ `No results were found.`") to event-channel
-					wait 0.2 seconds
-					clear {ratelimit}
 					exit
 				wait 1 second
 				play {track::1} in event-guild
 				set {unixtime} to unix timestamp of now
 				clear {ratelimit}
-				set {_current} to the track the bot is playing in the event-guild
+				clear {_searchresult::*}
 				make embed:
-					set {_thumbnail} to track thumbnail of {_searchresult::1}
-					replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
-					set thumbnail of embed to {_thumbnail} 
-					set title of embed to "%{_searchresult::1}%"
-					set title url of embed to track url of {_searchresult::1}
-					set color of embed to {@zencolour}
+					set title of embed to "%{track::1}%"
+					set thumbnail of embed to track thumbnail of {track::1}
+					set title url of embed to track url of {track::1}
+					set color of embed to color from rgb 32, 34, 37
 					set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
-					add "Duration: `%track duration of {_searchresult::1}%`" to {_l::*}
-					add "Channel: `%track author of {_searchresult::1}%`" to {_l::*}
+					add "Duration: `%track duration of {track::1}%`" to {_l::*}
+					add "Channel: `%track author of {track::1}%`" to {_l::*}
 					set description of embed to join {_l::*} with nl
 				send last embed to event-channel
-				clear {_searchresult::*}
 				clear {track::1}
-				set {musicchannel} to event-channel
+				exit
+			else:
+				send createQuickEmbed("","❌ `This is not a valid link.`") to event-channel
 				clear {ratelimit}
 				exit
-			if arg-1 contains "www.youtube.com/playlist?list=":
-				clear {ratelimit}
-				connect event-bot to voice channel of event-member
-				search in youtube for arg-1 and store it in {_searchresult::*}
-				add {_searchresult::*} to {track::*}
-				wait 1 second
-				play {_searchresult::*} in event-guild
-				set {unixtime} to unix timestamp of now
-				clear {finaltime}
-				loop {_searchresult::*}:
-					set {_ans} to toSeconds(track duration of loop-value)
-					add {_ans} to {_time}
-				set {_time} to "%{_time}% seconds" parsed as timespan
-				make embed:
-					set title of embed to "Added %size of {_searchresult::*}% tracks to the queue."
-					set {_thumbnail} to track thumbnail of {_searchresult::1}
-					replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
-					set thumbnail of embed to {_thumbnail}
-					set title url of embed to track url of {_searchresult::1}
-					set title url of embed to arg-1
-					set color of embed to {@zencolour}
-					set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
-					add "Duration: `%{_time}%`" to {_l::*}
-				set description of embed to join {_l::*} with nl
-				send last embed to event-channel
-				clear {totaltime}
-				clear {_searchresult::*}
-				clear {track::1}
-				clear {ratelimit}
-				set {musicchannel} to event-channel
-				exit
-		if arg-1 does not contain "www.youtube.com/playlist?list=" or "www.youtube.com/watch?v=" or "https://youtu.be/":
-			search in youtube for arg-1 and store it in {_searchresult::*}
-			add {_searchresult::1} to {track::*}
-			if {_searchresult::1} is not set:
-				send createQuickEmbed("","❌ `No results were found.`") to event-channel
-				clear {ratelimit}
-				exit
-		if arg-1 does not contain "http" or "https":
-			clear {ratelimit}
-			search in youtube for arg-1 and store it in {_searchresult::*}
-			add {_searchresult::1} to {track::*}
-			wait 1 second
-			play {track::1} in event-guild
-			set {unixtime} to unix timestamp of now
-			set {_current} to track the bot is playing in the event-guild
-			make embed:
-				set title of embed to "%{_searchresult::1}%"
-				set {_thumbnail} to track thumbnail of {_searchresult::1}
-				replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
-				set title url of embed to track url of {_searchresult::1}
-				set thumbnail of embed to {_thumbnail}
-				set color of embed to {@zencolour}
-				set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
-				add "Duration: `%track duration of {track::1}%`" to {_l::*}
-				add "Channel: `%track author of {track::1}%`" to {_l::*}
-				set description of embed to join {_l::*} with nl
-			send last embed to event-channel
-			clear {track::1}
-			clear {ratelimit}
-			set {musicchannel} to event-channel
-			exit
-
-discord command soundcloud [<string>]:
-	prefixes: &
-	category: music
-	aliases: sc
-	description: Plays a song from soundcloud.
-	executable in: guild
-	trigger:
 		connect event-bot to voice channel of event-member
-		search in soundcloud for arg-1 and store it in {_searchresult::*}
+		search in youtube for arg-1 and store it in {_searchresult::*}
 		add {_searchresult::1} to {track::*}
 		if {track::1} is not set:
-			send "no song was found" to event-channel
+			send createQuickEmbed("","❌ `No results were found.`") to event-channel
 			exit
+		wait 1 second
+		play {track::1} in event-guild
+		set {unixtime} to unix timestamp of now
+		clear {_searchresult::*}
 		make embed:
 			set title of embed to "%{track::1}%"
 			set thumbnail of embed to track thumbnail of {track::1}
 			set title url of embed to track url of {track::1}
-			set color of embed to {@zencolour}
+			set color of embed to color from rgb 32, 34, 37
 			set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
 			add "Duration: `%track duration of {track::1}%`" to {_l::*}
 			add "Channel: `%track author of {track::1}%`" to {_l::*}
 			set description of embed to join {_l::*} with nl
 		send last embed to event-channel
-		wait 1 second
-		play {track::1} in event-guild
-		set {unixtime} to unix timestamp of now
+		clear {track::1}
 		clear {ratelimit}
-		clear {_searchresult::*}
-		clear {track::1}
-		set {musicchannel} to event-channel
 		exit
 
-discord command song [<text>]:
-	executable in: guild
-	category: music
-	prefixes: &
-	description: Plays a song from the server host's computer or a compatible link.
-	trigger:
-		if id of event-member is "211789389401948160":
-			load locale track from arg-1 and store it in {_tracky}
-			wait 1 second
-			if {_tracky} is not set:
-				send "file not found" to event-channel
-			else:
-				connect event-bot to voice channel of event-member
-				play {_tracky} in event-guild
-
-on track start seen by "azenyfh":
-	set {unixtime} to unix timestamp of now
-	wait 1 second
-	set {_current} to the track the bot is playing in the event-guild
-	make embed:
-		set {_thumbnail} to track thumbnail of track the bot is playing in the event-guild
-		replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
-		set thumbnail of embed to {_thumbnail}
-		set color of embed to {@zencolour}
-		set title of embed to "**Now playing: %{_current}%**"
-		set title url of embed to track url of {_current}
-		add "Channel: `%track author of track the bot is playing in the event-guild%`%nl%" to {_l::*}
-		add "Duration: `%track duration of track the bot is playing in the event-guild%`" to {_l::*}
-		set description of embed to join {_l::*} with nl
-	send last embed to {musicchannel}
-
-on track end seen by "azenyfh":
-	if bot is repeating in event-guild:
-		exit
-	if {track::1} is set:
-		clear {track::1}
-	wait 0.2 seconds
-	play {track::1} in event-guild
-	if {track::1} is not set:
-		skip track of event-guild
-	wait 1 minute
-	if bot is not playing in event-guild:
-		disconnect bot of event-guild
-
-discord command loop:
-	executable in: guild
-	aliases: unloop
-	category: music
-	description: Loops or unloops the current track that is being played.
-	prefixes: &
-	trigger:
-		if bot is repeating in event-guild:
-			set repeating state of event-guild to no
-			send "no longer looping" to event-channel
-		else:
-			set repeating state of event-guild to yes
-			send "now looping" to event-channel
-
-discord command join:
-	description: Makes the bot join the voice channel.
-	category: general
-	prefixes: &
-	executable in: guild
-	trigger:
-		connect event-bot to voice channel of event-member
-
-discord command forceskip:
-	description: Skips the current song.
-	aliases: fs
-	prefixes: &
-	category: dj
-	executable in: guild
-	trigger:
-		skip track of event-guild
-		clear {track::1}
-		wait 1 second
-		if {track::1} is set:
-			play {track::1} in event-guild
-
-discord command exec <text>:
-	prefixes: &
-	description: Executes some skript code.
-	category: dj
-	trigger:
-		eval arg-1 and store the errors in {_errors}
-		if {_errors} is set:
-			reply with "Error: %nl%```%{_errors}%```" # i am using reply here so that i can execute code in dms as well.
-
-command /eval <text>:
-	trigger:
-		eval arg-1 and store the errors in {_errors}
-		if {_errors} is set:
-			send "Error: %nl%```%{_errors}%```" to console
+on bot leave:
+	clear queue of event-guild
+	clear {track::*}
 
 discord command np:
 	aliases: nowplaying
-	description: Shows you what song is playing right now.
-	prefixes: &
-	category: general
+	prefixes: !
 	executable in: guild
 	trigger:
 		set {_current} to the track the bot is playing in the event-guild
 		if {_current} is not set:
 			send createQuickEmbed("","❌ `I am not playing anything.`") to event-channel
 			exit
-		set {totaltime} to toSeconds(track duration of track bot is playing in event-guild)
-		set {tracktime} to toSeconds(track position of track event-bot is playing in event-guild)
-		#set {_timeleft} to {totaltime} - {tracktime}
-		set {_location} to 20-round( ({totaltime}-{tracktime})/{totaltime} * 20)
-		if {_location} < 0:
-			send "**an error has occurred**, location is less than 0 on this track. Report this here: https://www.github.com/ZeNyfh/gigavibe/issues" to event-channel
-			exit
-		set {_line} to "0▬1▬2▬3▬4▬5▬6▬7▬8▬9▬10▬11▬12▬13▬14▬15▬16▬17▬18▬19▬20"
-		set {_linesplit::*} to {_line} split at "%{_location}%"
-		set {_line} to "%{_linesplit::1}%🔘%{_linesplit::2}%"
-		set {_temp} to concatenate {_linesplit::*}
-		set {_line} to "%{_line}%%{_temp}%"
-		replace every "0" and "1" and "2" and "3" and "4" and "5" and "6" and "7" and "8" and "9" with "" in {_line}
-		replace every "<none>" with "" in {_line}
-		set {_thumbnail} to track thumbnail of the track the bot is playing in the event-guild
-		make embed:
-			set color of embed to {@zencolour}
-			set title of embed to "**%{_current}%**%nl%"
-			set title url of embed to track url of {_current}
-			add "`%{_line}%`%nl%" to {_l::*}
-			replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
-			set thumbnail of embed to {_thumbnail}
-			set {_tracktime} to "%{tracktime}% seconds" parsed as timespan
-			set {_tracktime} to "%{_tracktime}%"
-			set {_duration} to "%track duration of {_current}%"
-			add "Channel: `%track author of {_current}%`%nl%" to {_l::*}
-			add "Duration: `%{_tracktime}% / %track duration of {_current}%`" to {_l::*}
-			if bot is repeating in event-guild:
-				add "%nl%🔄 `Looping`" to {_l::*}
-			set description of embed to join {_l::*} with nl
-		send last embed to event-channel
-		clear {tracktime}
 		clear {totaltime}
+		set {_unixtime} to unix timestamp of now
+		set {tracktime} to {_unixtime} - {unixtime}
+		clear {_42why::*}
+		set {_totaltime} to track duration of {_current}
+		set {_test} to "%{_totaltime}%" parsed as timespan
+		set {_test} to "%{_test}%"
+		set {_test1} to {_test}
+		if {_test} contains "second" or "seconds":
+			replace all " seconds" or " second" with "" in {_test}
+		if {_test} contains "minute" or "minutes":
+			replace all " minutes" or " minute" with "" in {_test}
+		if {_test} contains " hours" or " hour":
+			replace all " hours" or " hour" with "" in {_test}
+		if {_test} contains " and":
+			replace all " and" with "" in {_test}
+		set {_timesplit::*} to "%{_test}%" split at " "
+		if {_timesplit::3} is set:
+			set {totaltime} to {_timesplit::1} * 3600
+			add {_timesplit::2} * 60 to {totaltime}
+			add {_timesplit::3} to {totaltime}
+		if {_timesplit::3} is not set:
+			if {_timesplit::2} is set:
+				if {_test1} does not contain " hour" or " hours":
+					set {_timesplit::1} to {_timesplit::1} parsed as number
+					add {_timesplit::1} * 60 to {totaltime}
+					add {_timesplit::2} parsed as number to {totaltime}
+				if {_test1} does not contain " minute" or " minutes":
+					set {_timesplit::1} to {_timesplit::1} parsed as number
+					add {_timesplit::1} * 3600 to {finaltime}
+					add {_timesplit::2} parsed as number to {finaltime}
+				if {_test1} does not contain " second" or " seconds":
+					set {_timesplit::1} to {_timesplit::1} parsed as number
+					add {_timesplit::1} * 3600 to {totaltime}
+					set {_timesplit::2} to {_timesplit::2} parsed as number
+					add {_timesplit::2} * 60 to {totaltime}
+			if {_timesplit::3} is not set:
+				if {_timesplit::2} is not set:
+					if {_timesplit::1} is set:
+						add {_timesplit::1} parsed as number to {totaltime}
+			set {_timeleft} to {totaltime} - {tracktime}
+			set {_location} to 20-round( ({totaltime}-{tracktime})/{totaltime} * 20)
+			if {_location} < 0:
+				send "**an error has occurred**, location is less than 0 on this track. Report this here: https://www.github.com/ZeNyfh/gigavibe/issues" to event-channel
+				exit
+			set {_line} to "0▬1▬2▬3▬4▬5▬6▬7▬8▬9▬10▬11▬12▬13▬14▬15▬16▬17▬18▬19▬20"
+			set {_linesplit::*} to {_line} split at "%{_location}%"
+			set {_line} to "%{_linesplit::1}%🔘%{_linesplit::2}%"
+			clear {_linesplit::1} and {_linesplit::2}
+			set {_temp} to concatenate {_linesplit::*}
+			set {_line} to "%{_line}%%{_temp}%"
+			replace every "0" and "1" and "2" and "3" and "4" and "5" and "6" and "7" and "8" and "9" with "" in {_line}
+			replace every "<none>" with "" in {_line}
+			make embed:
+				set title of embed to "%{_current}%"
+				set title url of embed to track url of {_current}
+				set color of embed to color from rgb 32, 34, 37
+				set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+				set thumbnail of embed to track thumbnail of {track::1}
+				add "%nl%%nl%`%{_line}%`%nl%" to {_l::*}
+				set {_tracktime} to "%{tracktime}% seconds" parsed as timespan
+				set {_tracktime} to {_tracktime} 
+				add "Duration: `%{_tracktime}% / %track duration of {_current}%`%nl%" to {_l::*}
+				add "Channel: `%track author of {_current}%`" to {_l::*}
+				if bot is repeating in event-guild:
+					add "%nl%🔄 `Looping`" to {_l::*}
+				set description of embed to join {_l::*} with nl
+			send last embed to event-channel
+			clear {tracktime}
+			clear {totaltime}
+			exit
+
+on track end seen by "Gigavibe":
+	clear {totaltime}
+	clear {tracktime}
+	set {_members::*} to members in the voice channel of event-bot in event-guild
+	loop {members::*}:
+		if loop-value is a discord bot:
+			remove loop-value from {_members::*}
+	if {_members::*} is not set:
+		disconnect bot of event-guild
+
+on load:
+	clear {userid::*}
+	clear {votecount}
+	clear {temp}
+	clear {halfmembercount}
+	clear {aaa}
+
+discord command voteskip:
+	aliases: skip
+	prefixes: !
+	executable in: guild
+	trigger:
+		set {_a} to channel of event-member in event-guild
+		if {_a} is not set:
+			send createQuickEmbed("","❌ `You need to be in a voice channel to use this command.`") to event-channel
+			exit
+		else:
+			add 1 to {temp}
+			set {members::*} to members in the voice channel of event-member in event-guild
+			loop {members::*}:
+				if loop-value is a discord bot:
+					remove loop-value from {members::*}
+					remove 1 from {temp}
+				if loop-value is a member:
+					add 1 to {temp}
+			if {userid::*} contains id of event-member:
+				send createQuickEmbed("","❌ `You have already voted to skip.`") to event-channel
+				exit
+			set {_temptrack} to the track the bot is playing in the event-guild
+			if {_temptrack} is not set:
+				send createQuickEmbed("","❌ `No track is playing right now.`") to event-channel
+				exit
+			remove 1 from {temp}
+			add 1 to {votecount}
+			add id of event-member to {userid::*}
+			set {halfmembercount} to round({temp}/2)
+			clear {temp}
+			if {votecount} is not {halfmembercount}:
+				make embed:
+					set {_B::1} to "✅ You voted to skip the current track."
+					set footer of embed to "%{votecount}% of %{halfmembercount}% needed to skip"
+					set description of embed to join {_B::*} with nl
+					set color of embed to color from rgb 32, 34, 37
+				send last embed to event-channel
+			else if {votecount} = {halfmembercount}:
+				send createQuickEmbed("",":fast_forward: `Skipped`") to event-channel
+				skip track of event-guild
+				clear {userid::*}
+				clear {votecount}
+				clear {temp}
+				clear {halfmembercount}
+				clear {aaa}
+				wait 60 seconds
+				if the bot is playing in the event-guild: # this is backwards
+					disconnect bot of event-guild
+					set repeating state of event-guild to no
+				exit
+
+discord command forceskipall:
+	aliases: fsall
+	prefixes: !
+	executable in: guild
+	trigger:
+		if {blockeddj::*} contains discord id of event-member:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
+		if voice channel of event-bot in event-guild is not set:
+			send createQuickEmbed("","❌ `I am not in a voice channel.`") to event-channel
+			exit
+		else:
+			set {_test} to event-member
+			if {dj::*} is not set:
+				send createQuickEmbed("","❌ `No DJs are set.`") to event-channel
+				exit
+			else:
+				loop {dj::*}:
+					set {_role} to loop-value parsed as role
+					if {_test} has role {_role}:
+						clear {queue::*}
+						stop current queue of event-guild
+						make embed:
+							set description of embed to ":fast_forward: `Skipped all`"
+							set color of embed to color from rgb 32, 34, 37
+							set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+						send last embed to event-channel
+						wait 60 seconds
+						if the bot is playing in the event-guild: # this is backwards
+							disconnect bot of event-guild
+							set repeating state of event-guild to no
+						exit
+					else:
+						continue
+		send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+		exit
+
+discord command forceskip:
+	aliases: fs
+	prefixes: !
+	executable in: guild
+	trigger:
+		if {blockeddj::*} contains discord id of event-member:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
+		if voice channel of event-bot in event-guild is not set:
+			send createQuickEmbed("","❌ `I am not in a voice channel.`") to event-channel
+			exit
+		if {dj::*} is not set:
+			send createQuickEmbed("","❌ `No DJs are set.`") to event-channel
+			exit
+		else:
+			set {_test} to event-member
+			loop {dj::*}:
+				set {_role} to loop-value parsed as role
+				if {_test} has role {_role}:
+					skip track of event-guild
+					make embed:
+						set description of embed to ":fast_forward: `Skipped`"
+						set color of embed to color from rgb 32, 34, 37
+						set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+					send last embed to event-channel
+					wait 1 second
+					play {track::1} in event-guild
+					set {unixtime} to unix timestamp of now
+					clear {votecount}
+					wait 60 seconds
+					if the bot is playing in the event-guild: # this is backwards
+						disconnect bot of event-guild
+						set repeating state of event-guild to no
+					exit
+				if {_test} does not have role {_role}:
+					continue
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
+
+discord command leave:
+	prefixes: !
+	executable in: guild
+	trigger:
+		if {blockeddj::*} contains discord id of event-member:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
+		if voice channel of event-bot in event-guild is not set:
+			send createQuickEmbed("","❌ `I am not in a voice channel.`") to event-channel
+			exit
+		if {dj::*} is not set:
+			send createQuickEmbed("","❌ `No DJs are set.`") to event-channel
+			exit
+		else:
+			set {_test} to event-member
+			loop {dj::*}:
+				set {_role} to loop-value parsed as role
+				if {_test} has role {_role}:
+					if voice channel of event-bot in event-guild is set:
+						make embed:
+							set description of embed to ":mailbox_with_no_mail: `Successfully disconnected.`"
+							set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+							set color of embed to color from rgb 32, 34, 37
+						send last embed to event-channel
+						disconnect bot of event-guild
+						clear {queue::*}
+						clear {track::*}
+						stop current queue of event-guild
+						set repeating state of event-guild to no
+						exit
+					else:
+						send createQuickEmbed("","❌ `Im not in a VC`") to event-channel
+						exit
+				else: #Is this else necessary? -9382
+					continue
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
 
 discord command queue:
-	prefixes: &
+	prefixes: !
 	aliases: q
-	category: music
-	description: Shows you all of the songs the bot has queued.
 	executable in: guild
 	trigger:
 		clear {finaltime}
 		set {queue::*} to queue of event-guild
 		set {_current} to the track the bot is playing in the event-guild
 		if {_current} is not set:
-			send createQuickEmbed("","❌ `There are no tracks in the queue.`") to event-channel
+			send createQuickEmbed("","❌ `There are no songs in the queue`") to event-channel
+			exit
 		else:
-			set {_curfinaltime} to toSeconds(track duration of track the bot is playing in the event-guild)
-			add {_curfinaltime} to {finaltime}
+			if {_current} is set:
+				set {_totaltime} to track duration of {_current}
+				set {_test} to "%{_totaltime}%" parsed as timespan
+				set {_test} to "%{_test}%"
+				set {_test1} to "%{_test}%"
+				replace all " seconds" or " second" with "" in {_test}
+				replace all " minutes" or " minute" with "" in {_test}
+				replace all " hours" or " hour" with "" in {_test}
+				replace all " and" with "" in {_test}
+				set {_timesplit::*} to "%{_test}%" split at " "
+				if {_timesplit::3} is set:
+					set {finaltime} to {timesplit::1} * 3600
+					add {_timesplit::2} * 60 to {finaltime}
+					add {_timesplit::3} to {finaltime}
+				if {_timesplit::3} is not set:
+					if {_timesplit::2} is set:
+						if {_test1} does not contain " hour" or " hours":
+							set {_timesplit::1} to {_timesplit::1} parsed as number
+							add {_timesplit::1} * 60 to {finaltime}
+							add {_timesplit::2} parsed as number to {finaltime}
+						if {_test1} does not contain " minute" or " minutes":
+							set {_timesplit::1} to {_timesplit::1} parsed as number
+							add {_timesplit::1} * 3600 to {finaltime}
+							add {_timesplit::2} parsed as number to {finaltime}
+						if {_test1} does not contain " second" or " seconds":
+							set {_timesplit::1} to {_timesplit::1} parsed as number
+							add {_timesplit::1} * 3600 to {finaltime}
+							set {_timesplit::2} to {_timesplit::2} parsed as number
+							add {_timesplit::2} * 60 to {finaltime}							
+				if {_timesplit::3} is not set:
+					if {_timesplit::2} is not set:
+						if {_timesplit::1} is set:
+							add {_timesplit::1} parsed as number to {finaltime}
 			if {queue::*} is set:
 				loop {queue::*}:
-					set {_finaltime} to toSeconds(track duration of loop-value)
-					add {_finaltime} to {finaltime}
-					add 1 to {_count}
+					set {_totaltime} to track duration of loop-value
+					set {_test} to "%{_totaltime}%" parsed as timespan
+					set {_test} to "%{_test}%"
+					replace all " seconds" or " second" with "" in {_test}
+					replace all " minutes" or " minute" with "" in {_test}
+					replace all " hours" or " hour" with "" in {_test}
+					replace all " and" with "" in {_test}
+					set {_timesplit::*} to "%{_test}%" split at " "
+					if {_timesplit::3} is set:
+						set {finaltime} to {timesplit::1} * 3600
+						add {_timesplit::2} * 60 to {finaltime}
+						add {_timesplit::3} to {finaltime}
+					if {_timesplit::3} is not set:
+						if {_timesplit::2} is set:
+							set {_timesplit::1} to {_timesplit::1} parsed as number
+							add {_timesplit::1} * 60 to {finaltime}
+							add {_timesplit::2} parsed as number to {finaltime}
+					if {_timesplit::3} is not set:
+						if {_timesplit::2} is not set:
+							if {_timesplit::1} is set:
+								add {_timesplit::1} parsed as number to {finaltime}
 			set {finaltime} to "%{finaltime}% seconds" parsed as timespan
 			set {finaltime} to "%{finaltime}%"
 			clear {_B::*}
 			make embed:
-				set {_thumbnail} to track thumbnail of the track the bot is playing in the event-guild
-				set color of embed to {@zencolour}
-				set footer of embed to "%{_count}% Songs queued | Length: %{finaltime}%"
-				set {_B::1} to "**__Now playing__**: %nl%[**%the track the bot is playing in the event-guild%**](%track url of the track the bot is playing in the event-guild%)%nl%"
-				set {_B::3} to "1. [%{queue::1}%](%track url of {queue::1}%)"
-				set {_B::4} to "2. [%{queue::2}%](%track url of {queue::2}%)"
-				set {_B::5} to "3. [%{queue::3}%](%track url of {queue::3}%)"
-				set {_B::6} to "4. [%{queue::4}%](%track url of {queue::4}%)"
-				set {_B::7} to "5. [%{queue::5}%](%track url of {queue::5}%)"
-				replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
-				set thumbnail of embed to {_thumbnail}
+				set color of embed to color from rgb 32, 34, 37
+				set footer of embed to "Queue length: %{finaltime}%"
+				set {_B::1} to "📝 `Queue`%nl%"
+				set {_B::2} to "`Now playing:` [**%{_current}%**](%track url of {_current}%)"
+				set {_B::3} to "2. [%{queue::1}%](%track url of {queue::1}%)"
+				set {_B::4} to "3. [%{queue::2}%](%track url of {queue::2}%)"
+				set {_B::5} to "4. [%{queue::3}%](%track url of {queue::3}%)"
+				set {_B::6} to "5. [%{queue::4}%](%track url of {queue::4}%)"
 				set description of embed to join {_B::*} with nl
-			send last embed to event-channel and store it in {queueembed}
+			send last embed to event-channel
 			clear {finaltime}
-			set {_row} to new buttons row
-			add new button with id "queueforward" with style secondary with emoji "x" to buttons of {_row}
-			add row {_row} to {queueembed}
+			wait 1 seconds
+			exit
 
-discord command shuffle:
-	prefixes: &
-	category: music
-	description: Shuffles the current queue.
+discord command reload:
+	prefixes: !
+	trigger:
+		if discord id of event-member is "211789389401948160":
+			send "Successfully reloaded." to event-channel
+			execute console command "skript reload b"
+		exit
+
+discord command help:
+	aliases: cmds
+	prefixes: !
 	executable in: guild
 	trigger:
-		set {_current} to the track the bot is playing in the event-guild
-		shuffle current queue of the event-guild
-		set {track::*} to queue of event-guild
-		stop current queue of event-guild
-		wait 1 second
-		play {track::*} in event-guild
-		play {_current} in event-guild
+		set {_loop} to true
+		set {_linecount} to 0
+		while {_loop} is true:
+			add 1 to {_linecount}
+			add line {_linecount} in file "plugins/helplog.txt" to {_helplist::*}
+			if {_linecount} = line count of file "plugins/helplog.txt":
+				set {_loop} to false
+				make embed:
+					set color of embed to color from rgb 32, 34, 37
+					set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+					set description of embed to join {_helplist::*} with nl
+					set title of embed to "**📔 `Commands`**"
+				send last embed to event-channel and store it in {helpembed}
+				set {_row} to new buttons row
+				add new button with id "help" with style secondary with text "General" to buttons of {_row}
+				add new button with id "dj" with style secondary with text "Audio" to buttons of {_row}
+				add new button with id "admin" with style secondary with text "Admin" to buttons of {_row}
+				add row {_row} to {helpembed}
+
+discord command github:
+	prefixes: !
+	aliases: bug
+	executable in: guild
+	trigger:
+		make embed:
+			set color of embed to color from rgb 32, 34, 37
+			add "❕ `Use this for bug reports and feature requests ONLY`%nl%" to {_a::*}
+			add "❕ `When making an issue, make sure to specify which bot has the bug (gigavibe or trollvibe)`%nl%" to {_a::*}
+			add "https://github.com/ZeNyfh/gigavibe/issues" to {_a::*}
+			set description of embed to join {_a::*} with nl
+		send last embed to event-channel
 
 on button click:
-	if {_id} is "queueforward":
-		add 1 to {queuenumber}
-		make embed:
-			set {_num} to evaluate expr "1*5+%{queuenumber}%"
-			set color of embed to {@zencolour}
-			set footer of embed to "Queue length: %{finaltime}%"
-			set {_B::1} to "📝 `Queue`%nl%"
-			set {_B::2} to "6. [%{queue::5}%](%track url of {queue::5}%)"
-			set {_B::3} to "7. [%{queue::6}%](%track url of {queue::6}%)"
-			set {_B::4} to "8. [%{queue::7}%](%track url of {queue::7}%)"
-			set {_B::5} to "9. [%{queue::8}%](%track url of {queue::8}%)"
-			set {_B::6} to "10. [%{queue::9}%](%track url of {queue::9}%)"
-			set description of embed to join {_B::*} with nl
+	set {_row} to new buttons row
+	add new button with id "help" with style secondary with text "General" to buttons of {_row}
+	add new button with id "dj" with style secondary with text "Audio" to buttons of {_row}
+	add new button with id "admin" with style secondary with text "Admin" to buttons of {_row}
+	set {_id} to discord id of event-button
+	if {_id} is "dj":
+		set {_loop} to true
+		set {_linecount} to 0
+		while {_loop} is true:
+			add 1 to {_linecount}
+			add line {_linecount} in file "plugins/djlog.txt" to {_helplist::*}
+			if {_linecount} = line count of file "plugins/djlog.txt":
+				set {_loop} to false
+				make embed:
+					set color of embed to color from rgb 32, 34, 37
+					set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+					set description of embed to join {_helplist::*} with nl
+					set title of embed to "🔊 `Audio`"
+				set {_embed} to last embed
+				delete discord entity {helpembed}
+				delete discord entity {embed}
+				send last embed to event-channel and store it in {embed}
+				wait 0.5 seconds
+				add row {_row} to {embed}
+	if {_id} is "admin":
+		set {_loop} to true
+		set {_linecount} to 0
+		while {_loop} is true:
+			add 1 to {_linecount}
+			add line {_linecount} in file "plugins/adminlog.txt" to {_helplist::*}
+			if {_linecount} = line count of file "plugins/adminlog.txt":
+				set {_loop} to false
+				make embed:
+					set color of embed to color from rgb 32, 34, 37
+					set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+					set description of embed to join {_helplist::*} with nl
+					set title of embed to "📝 `Admin Help`"
+				set {_embed} to last embed
+				delete discord entity {helpembed}
+				delete discord entity {embed}
+				send last embed to event-channel and store it in {embed}
+				wait 0.5 seconds
+				add row {_row} to {embed}
+	if {_id} is "help":
+		set {_loop} to true
+		set {_linecount} to 0
+		while {_loop} is true:
+			add 1 to {_linecount}
+			add line {_linecount} in file "plugins/generallog.txt" to {_helplist::*}
+			if {_linecount} = line count of file "plugins/generallog.txt":
+				set {_loop} to false
+				make embed:
+					set color of embed to color from rgb 32, 34, 37
+					set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+					set description of embed to join {_helplist::*} with nl
+					set title of embed to "📖 `Help`"
+				set {_embed} to last embed
+				delete discord entity {embed}
+				delete discord entity {helpembed}
+				send last embed to event-channel and store it in {embed}
+				wait 0.5 seconds
+				add row {_row} to {embed}
 
-on voice leave:
-	set {_sm} to self member of bot named "azenyfh" in event-guild
-	if event-member is not {_sm}:
-		wait 1 minute
-		set {_members::*} to audio members of voice channel of {_sm}
-		if OR(check [size of {_members::*} = 1], check [{_members::1} is not set]) = true:
-			disconnect bot of event-guild
+discord command clear queue:
+	aliases: queue clear, clearqueue, queueclear
+	prefixes: !
+	executable in: guild
+	trigger:
+		if {blockeddj::*} contains discord id of event-member:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
+		if {dj::*} is not set:
+			send createQuickEmbed("","❌ `No DJs are set.`") to event-channel
+			exit
+		else:
+			set {_test} to event-member
+			loop {dj::*}:
+				set {_role} to loop-value parsed as role
+				if {_test} has role {_role}:
+					clear {track::*}
+					clear {queue::*}
+					clear queue of event-guild
+					stop queue of event-guild
+					set {_tracks::*} to {_queue::*}
+					make embed:
+						set color of embed to color from rgb 32, 34, 37
+						set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+						set description of embed to "✅ `Cleared the queue`"
+					send last embed to event-channel
+					exit
+				else:
+					continue
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
+
+discord command whitelist <text>:
+	prefixes: !
+	executable in: guild
+	trigger:
+		if event-member does not have permission message manage:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
+		else:
+			set {_arg1} to arg-1 parsed as member
+			set {_arg1id} to id of {_arg1}
+			if {blockeddj::*} contains {_arg1id}:
+				remove {_arg1id} from {blockeddj::*}
+				send createQuickEmbed("","✅ `whitelisted %{_arg1}%.`") to event-channel
+				exit
+			if {blockeddj::*} contains discord id of event-member:
+				send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+				exit
+			else:
+				set {_arg1id} to arg-1 parsed as member #This entire setup is confusing -9382
+				if {blockeddj::*} contains {_arg1id}:
+					remove {_arg1id} from {blockeddj::*}
+					send createQuickEmbed("","✅ `whitelisted %{_arg1}%.`") to event-channel
+					exit
+				else:
+					send createQuickEmbed("","❌ `This person is not blacklisted.`") to event-channel
+					exit
+
+discord command clearblacklist:
+	aliases: blacklistclear
+	prefixes: !
+	executable in: guild
+	trigger:
+		if event-member has permission message manage:
+			clear {blockeddj::*}
+			send createQuickEmbed("","✅ `cleared the blacklist`") to event-channel
+			exit
+		else:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
+
+discord command loop:
+	executable in: guild
+	aliases: unloop
+	prefixes: !
+	trigger:
+		if {blockeddj::*} contains discord id of event-member:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
+		set {_test} to event-member
+		if {dj::*} is not set:
+			send createQuickEmbed("","❌ `No DJs are set.`") to event-channel
+			exit
+		else:
+			loop {dj::*}:
+				set {_role} to loop-value parsed as role
+				if {_test} has role {_role}:
+					if bot is repeating in event-guild:
+						set repeating state of event-guild to no
+						send createQuickEmbed("","✅ `No longer looping the current track.`") to event-channel
+						exit
+					else:
+						set repeating state of event-guild to yes
+						send createQuickEmbed("","🔄 `Looping the current track.`") to event-channel
+						exit
+				else: #Once again, is this required? -9382
+					continue
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
+
+discord command blacklist [<text>]:
+	prefixes: !
+	executable in: guild
+	trigger:
+		if event-member does not have permission message manage:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
+		if arg-1 is not set:
+			send createQuickEmbed("",join {blockeddj::*} with nl) to event-channel
+		else:
+			set {_a} to arg-1 parsed as member
+			set {blockeddj::*} to id of discord entity {_a}
+			send createQuickEmbed("","✅ `blacklisted %{_a}%.`") to event-channel
+		exit
+
+discord command dj [<text>]:
+	prefixes: !
+	executable in: guild
+	trigger:
+		if {blockeddj::*} contains discord id of event-member:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
+		if arg-1 is "list":
+			make embed:
+				set color of embed to color from rgb 32, 34, 37
+				set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+				set description of embed to join {dj::*} with nl
+				set title of embed to "`DJs`"
+			send last embed to event-channel
+			exit
+		if arg-1 is "clear":
+			exit
+		set {_parse} to discord name of arg-1 parsed as role
+		if event-member does not have permission message manage:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
+		else:
+			if {_parse} is not set:
+				send createQuickEmbed("","❌ `The argument given was not a role.`") to event-channel
+				exit
+			if {dj::*} is not set:
+				add arg-1 to {dj::*}
+				make embed:
+					set color of embed to color from rgb 32, 34, 37
+					set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+					set description of embed to "✅ `added {%{_parse}%} to DJs`"
+				send last embed to event-channel
+				exit
+			if {dj::*} is set:
+				if {dj::*} does not contain arg-1:
+					add arg-1 to {dj::*}
+					make embed:
+						set color of embed to color from rgb 32, 34, 37
+						set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+						set description of embed to "✅ `added {%{_parse}%} to DJs`"
+					send last embed to event-channel
+					exit
+				else:
+					remove arg-1 from {dj::*}
+					make embed:
+						set color of embed to color from rgb 32, 34, 37
+						set footer of embed to "Executed by %discord name of event-member%##%discord tag of event-member%"
+						set description of embed to "✅ `removed {%{_parse}%} from DJs`"
+					send last embed to event-channel
+					exit
+
+on load:
+	clear {check}
+	exit
+
+discord command djclear:
+	prefixes: !
+	aliases: cleardj
+	executable in: guild
+	trigger:
+		if {blockeddj::*} contains discord id of event-member:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
+		if event-member does not have permission message manage:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
+		make embed:
+			set color of embed to dark grey #Why the change? -9382
+			set footer of embed to "Executed by %discord name of event-user%##%discord tag of event-member%"
+			set title of embed to "✅ `Cleared all DJs`"
+		clear {dj::*}
+		send last embed to event-channel
+		exit
+
+discord command djlist:
+	prefixes: !
+	executable in: guild
+	trigger:
+		remove all "zenyfhwashere" from {dj::*}
+		if {blockeddj::*} contains discord id of event-member:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
+		if {dj::*} is not set:
+			send createQuickEmbed("","❌ `There are No DJs.`") to event-channel
+			exit
+		set {_test} to event-member
+		loop {dj::*}:
+			set {_role} to loop-value parsed as role
+			if {_test} has role {_role}:
+				make embed:
+					set color of embed to dark grey
+					set footer of embed to "Executed by %discord name of event-user%##%discord tag of event-member%"
+					set description of embed to join {dj::*} with nl
+					set title of embed to "`DJs`"
+				send last embed to event-channel
+				exit
+			else: #Once again -9382
+				continue
+		send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+
+on track start seen by "Gigavibe":
+	set {unixtime} to unix timestamp of now
+	exit
+
+on track end seen by "Gigavibe":
+	clear {tracktime}
+	clear {totaltime}
+	wait 60 seconds
+	clear {tracktime}
+	clear {totaltime}
+	set {_tempid} to {track::1}
+	if {_tempid} is {trackid}:
+		skip track of event-guild
 	else:
-		stop current queue of event-guild
+		exit
+
+on track end seen by "Gigavibe":
+	clear {userid::*}
+	clear {userid::*}
+	clear {temp}
+	clear {votecount}
+	clear {temp}
+	clear {userid::*}
+	clear {halfmembercount}
+	clear {votecount}
+	clear {aaa}
+	wait 60 seconds
+	if the bot is playing in the event-guild: # this is backwards
+		disconnect bot of event-guild
+		clear {track::*}
+		clear {queue::*}
+		clear queue of event-guild
+		if repeating state of event-guild is yes:
+			set repeating state of event-guild to no
+		exit
+
+on track end seen by "Gigavibe":
+	clear {track::1}
+	if {track::1} is set:
+		play {track::1} in event-guild
+		set repeating state of event-guild to no
+		exit
 
 discord command ping:
-	prefixes: &
+	prefixes: !
 	executable in: guild
-	category: general
-	description: Shows you the bot's ping.
 	trigger:
 		set {_unixtime} to unix timestamp of now
 		send message "." to event-channel and store it in {_temp}
 		set {_unixtime2} to unix timestamp of now
-		destroy discord entity {_temp}
+		delete discord entity {_temp}
 		subtract {_unixtime} from {_unixtime2}
 		send "ping: %{_unixtime2}*1000%ms" to event-channel
-
-discord command todo [<text>]:
-	prefixes: &
-	executable in: guild
-	category: DJ
-	description: Shows you what needs to be done or adds something to that list.
-	trigger:
-		if arg-1 is not set:
-			loop {todo::*}:
-				if loop-value is not set:
-					reply with "%loop-value%"
-					clear {todo::loop-index}
-			send createQuickEmbed("","%{todo::*}%") to event-channel
-			exit
-		if arg-1 is a number:
-			delete {todo::%arg-1%}
-			send createQuickEmbed("","✅ removed it from the list of to-dos!") to event-channel
-		add "%nl%%arg-1%" to {todo::*}
-		send createQuickEmbed("","✅ added it to the list of to-dos!") to event-channel
+		exit
 
 command /uptime:
 	trigger:
-		set {_uptime} to uptime of bot named "azenyfh"
+		set {_uptime} to uptime of bot named "Gigavibe"
 		send "%{_uptime}%" to console
 
-discord command uptime:
-	category: general
-	description: Shows you how long the bot has been online for.
-	prefixes: &
-	executable in: guild
+command /startgiga:
 	trigger:
-		set {_uptime} to uptime of bot named "azenyfh"
-		send createQuickEmbed("","⏰  %{_uptime}%") to event-channel
-
-on load:
-	set presence of bot "azenyfh" to playing "&todo"
-
-command /start:
-	trigger:
-		make new bot:
-			enable all default intents
-			login to {azenyfh} with name "azenyfh"
-		wait 1 second
-		set presence of {b} to playing "&todo"
+		set presence of bot "Gigavibe" to playing "!help"
+		if "Gigavibe" is loaded:
+			send "This will have catastrophic results, no." to console
+			exit
+		login to {tokenvibe} with name "Gigavibe"
 		execute console command "save-all"
-		set {b} to random bot of loaded bots
 		send "Loaded up." to console
-		set presence of {b} to playing "&todo"
+		exit
