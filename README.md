@@ -7,7 +7,7 @@
 > (jdk11 recommended)
 
 > A minecraft server running bukkit/spigot/paper
-> (paper recommended)
+> (skigot recommended for long term usage, paper for short term)
 
 # Installation
 > Move everything in the plugins folder into your minecraft server plugin folder
