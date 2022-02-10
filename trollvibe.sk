@@ -83,6 +83,18 @@ function helpMessage(string: string, u: user, g: guild) :: embedbuilder:
 import:
 	ch.njol.skript.log.SkriptLogger
 
+discord command reload:
+	prefixes: ?
+	category: admin
+	description: Reloads the bot code
+	executable in: guild
+	trigger:
+		if id of event-member is "568854670760476672":
+			execute console command "skript reload trollvibe"
+			reply with "reloaded the bot."
+			exit
+		send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+
 discord command help [<string>]:
 	prefixes: ?
 	category: general
@@ -135,6 +147,27 @@ on button click:
 	if event-button is "admin":
 		edit {embed} to show helpMessage("📑 `Admin`", event-user, event-guild) and keep buttons
 
+discord command blockchannel <text>:
+	prefixes: ?
+	category: admin
+	usage: <channel id>
+	aliases: bc
+	description: makes it so the bot cant be used in certain specified channels.
+	executable in: guild
+	trigger:
+		if arg 1 is not set:
+			send createQuickEmbed("","❌ `You need to specify a discord channel id.`") to event-channel
+			exit
+		loop text channels of event-guild:
+			if arg-1 is discord id of loop-value:
+				add arg-1 to {%id of event-guild%.blockedchannels::*}
+				send "✅ added %arg-1% to blocked channels." to event-channel
+				exit
+			else:
+				continue
+		send createQuickEmbed("","❌ `Could not find the discord channel.`") to event-channel
+		exit
+
 discord command soundcloud [<string>]:
 	prefixes: ?
 	category: music
@@ -143,12 +176,18 @@ discord command soundcloud [<string>]:
 	description: Plays a song from soundcloud.
 	executable in: guild
 	trigger:
+		if {%event-guild%.blockeddj::*} contains id of event-member:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
 		if arg 1 is not set:
 			send createQuickEmbed("","❌ `You need to specify a soundcloud search term.`") to event-channel
 			exit
 		set {_a} to voice channel of event-member in event-guild
 		if {_a} is not set:
 			send createQuickEmbed("","❌ `You need to be in a voice channel to use this command.`") to event-channel
+			exit
+		if {%id of event-guild%.blockedchannels::*} contains discord id of event-channel:
+			send createQuickEmbed("","❌ `You cant use this command in this channel.`") to event-channel
 			exit
 		connect event-bot to voice channel of event-member
 		search in soundcloud for arg-1 and store it in {_searchresult::*}
@@ -181,6 +220,9 @@ discord command play [<string>]:
 	description: Plays songs or playlists from youtube.
 	executable in: guild
 	trigger:
+		if {%event-guild%.blockeddj::*} contains id of event-member:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
 		if {%id of event-guild%.ratelimit} is set:
 			send createQuickEmbed("","❌ `You are doing this command too quickly!`") to event-channel
 			clear {%id of event-guild%.ratelimit}
@@ -193,6 +235,11 @@ discord command play [<string>]:
 		set {_a} to voice channel of event-member in event-guild
 		if {_a} is not set:
 			send createQuickEmbed("","❌ `You need to be in a voice channel to use this command.`") to event-channel
+			clear {%id of event-guild%.ratelimit}
+			clear {%id of event-guild%.ratelimit}
+			exit
+		if {%id of event-guild%.blockedchannels::*} contains discord id of event-channel:
+			send createQuickEmbed("","❌ `You cant use this command in this channel.`") to event-channel
 			clear {%id of event-guild%.ratelimit}
 			exit
 		set {playcheck} to true
@@ -287,21 +334,51 @@ discord command play [<string>]:
 		clear {%id of event-guild%.ratelimit}
 		send last embed to event-channel
 
-discord command song [<text>]:
+discord command song [text]:
 	executable in: guild
+	aliases: playfile, pf
 	category: music
 	prefixes: ?
 	usage: <url/dir>
-	description: Plays a song from the server host's computer or a compatible link.
+	description: Plays a song from a compatible link.
 	trigger:
-		if id of event-member is "211789389401948160":
-			load locale track from arg-1 and store it in {_track}
-			wait 1 second
-			if {_track} is not set:
-				send "file not found" to event-channel
+		if event-member has permission administrator:
+			if "%roles of event-member%" contains "%{%event-guild%.blockeddj::*}%":
+				send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+				exit
+			set {_a} to voice channel of event-member in event-guild
+			if {_a} is not set:
+				send createQuickEmbed("","? `You need to be in a voice channel to use this command.`") to event-channel
+				exit
+			connect event-bot to voice channel of event-member
+			delete file "plugins/FILE.mp3"
+			set {_att::*} to attachments of event-message
+			set {_url} to url of {_att::1}
+			if "%{_att::1}%" ends with ".mp3" or ".mp4" or ".ogg" or ".flac" or ".wav" or ".mov" or ".m4a" or ".webm":
+				download file from "%{_url}%" to file "plugins/FILE.mp3"
+				wait 2 seconds
+				load locale track from "plugins/FILE.mp3" and store it in {_track}
+				if {_track} is not set:
+					send "file not found" to event-channel
+				else:
+					make embed:
+						set {_thumbnail} to track thumbnail of {_track}
+						set thumbnail of embed to {_thumbnail}
+						set title of embed to {_track}
+						if title of embed is not set:
+							set title of embed to "Local file"
+						set title url of embed to {_url}
+						set color of embed to {@zencolour}
+						add "Duration: `%track duration of {_track}%`" to {_l::*}
+						set description of embed to join {_l::*} with nl
+					send last embed to event-channel
+					connect event-bot to voice channel of event-member
+					play {_track} in event-guild
 			else:
-				connect event-bot to voice channel of event-member
-				play {_track} in event-guild
+				send createQuickEmbed("","❌ `Unsupported file format.`") to event-channel
+				exit
+			exit
+		send createQuickEmbed("","❌ `Dev Command.`") to event-channel
 
 on track start seen by "trollvibe":
 	clear {userid::*}
@@ -309,24 +386,23 @@ on track start seen by "trollvibe":
 	clear {temp}
 	clear {halfmembercount}
 	clear {aaa}
-	if {%id of event-guild%.loopqueue} is true:
-		set {_track} to track the bot is playing in the event-guild
-		play {_track} in event-guild
-		set {%id of event-guild%.track::*} to queue of event-guild
+	if repeating state of event-guild is yes:
+		set {_a} to true
 	set {unixtime} to unix timestamp of now
 	wait 1 second
 	set {_current} to the track the bot is playing in the event-guild
-	make embed:
-		set {_thumbnail} to track thumbnail of track the bot is playing in the event-guild
-		replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
-		set thumbnail of embed to {_thumbnail}
-		set color of embed to {@zencolour}
-		set title of embed to "**Now playing: %{_current}%**"
-		add "**Channel:**%nl%%track author of {_current}%%nl%" to {_l::*}
-		set title url of embed to "%track url of {_current}%"
-		add inline field named "**Duration:**" with value normalized track duration of the track the bot is playing in the event-guild to fields of embed
-		set description of embed to join {_l::*} with nl
-	send last embed to {%id of event-guild%.musicchannel}
+	if {_a} is not set:
+		make embed:
+			set {_thumbnail} to track thumbnail of track the bot is playing in the event-guild
+			replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
+			set thumbnail of embed to {_thumbnail}
+			set color of embed to {@zencolour}
+			set title of embed to "**Now playing: %{_current}%**"
+			add "**Channel:**%nl%%track author of {_current}%%nl%" to {_l::*}
+			set title url of embed to "%track url of {_current}%"
+			add inline field named "**Duration:**" with value normalized track duration of the track the bot is playing in the event-guild to fields of embed
+			set description of embed to join {_l::*} with nl
+		send last embed to {%id of event-guild%.musicchannel}
 
 on track end seen by "trollvibe":
 	set {%id of event-guild%.track::*} to queue of event-guild
@@ -350,10 +426,12 @@ discord command loop:
 	executable in: guild
 	aliases: unloop
 	category: music
-	usage: [<queue>]
 	description: Loops or unloops the current track that is being played.
 	prefixes: ?
 	trigger:
+		if {%event-guild%.blockeddj::*} contains id of event-member:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
 		if bot is repeating in event-guild:
 			set repeating state of event-guild to no
 			send "no longer looping" to event-channel
@@ -410,6 +488,9 @@ discord command join:
 	prefixes: ?
 	executable in: guild
 	trigger:
+		if {%event-guild%.blockeddj::*} contains id of event-member:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
 		loop {%id of event-guild%.dj::*}:
 			if event-member has role with id loop-value or {%event-guild%.boostrole}:
 				connect event-bot to voice channel of event-member
@@ -425,6 +506,9 @@ discord command disconnect:
 	aliases: leave
 	executable in: guild
 	trigger:
+		if {%event-guild%.blockeddj::*} contains id of event-member:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
 		loop {%id of event-guild%.dj::*}:
 			if event-member has role with id loop-value or {%event-guild%.boostrole}:
 				stop queue of event-guild
@@ -444,6 +528,9 @@ discord command forceskip:
 	category: dj
 	executable in: guild
 	trigger:
+		if {%event-guild%.blockeddj::*} contains id of event-member:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
 		if the bot is not playing in the event-guild:
 			send createQuickEmbed("","❌ `I am not playing anything.`") to event-channel
 			exit
@@ -456,19 +543,23 @@ discord command forceskip:
 					play {%id of event-guild%.track::1} in event-guild
 				send createQuickEmbed("", "⏩ `Skipped the current track.`") to event-channel
 				exit
+			else:
+				continue
 		send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+		exit
 
 discord command exec <text>:
 	prefixes: ?
 	description: Executes some skript code.
 	category: admin
 	trigger:
-		if id of event-member is "211789389401948160" or "260016427900076033":
+		if id of event-member is "568854670760476672" or "260016427900076033":
 			eval arg-1 and store the errors in {_errors}
-			if {_errors} is set:
-				reply with "Error: %nl%```%{_errors}%```" # i am using reply here so that i can execute code in dms as well.
 		else:
-			reply with "Only the owner can use exec"
+			if id of event-user is "568854670760476672" or "260016427900076033":
+				reply with "Only the owner can use exec"
+		if {_errors} is set:
+			reply with "Error: %nl%```%{_errors}%```" # i am using reply here so that i can execute code in dms as well.
 
 command /eval <text>:
 	trigger:
@@ -548,6 +639,9 @@ discord command shuffle:
 	description: Shuffles the current queue.
 	executable in: guild
 	trigger:
+		if {%event-guild%.blockeddj::*} contains id of event-member:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
 		loop {%id of event-guild%.dj::*}:
 			if event-member has role with id loop-value or {%event-guild%.boostrole}:
 				send createQuickEmbed("", "✅ Shuffled the queue.") to event-channel
@@ -561,20 +655,49 @@ discord command shuffle:
 				exit
 			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
 
-discord command clearblacklist:
-	aliases: blacklistclear
+discord command blacklist <text>:
+	aliases: bl
 	prefixes: ?
 	executable in: guild
 	category: admin
-	description: Clears the entire blacklist.
+	description: Adds a person to the blacklist.
 	trigger:
 		if event-member has permission administrator:
-			clear {%event-guild%.blockeddj::*}
-			send createQuickEmbed("","✅ `cleared the blacklist`") to event-channel
-			exit
+			if arg-1 is "list":
+				send "%{%event-guild%.blockeddj::*}%" to event-channel
+			else:
+				add arg-1 to {%event-guild%.blockeddj::*}
+				send createQuickEmbed("","✅ `added %arg-1% to the list.`") to event-channel
 		else:
 			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
 			exit
+
+discord command clearblacklist [<text>]:
+	aliases: blacklistclear, blacklistremove
+	prefixes: ?
+	executable in: guild
+	category: admin
+	description: Clears the entire blacklist or removes a member from it.
+	usage: [<member_id>]
+	trigger:
+		if event-member has permission administrator:
+			if arg-1 is set:
+				loop {%event-guild%.blockeddj::*}:
+					add 1 to {_num}
+					if loop-value is arg-1:
+						clear {%event-guild%.blockeddj::%{_num}%}
+						send createQuickEmbed("","✅ `removed %loop-value% from the blacklist`") to event-channel
+						exit
+					else:
+						continue
+				send createQuickEmbed("","❌ `User isnt blacklisted.`") to event-channel
+			else:
+				clear {%event-guild%.blockeddj::*}
+				send createQuickEmbed("","✅ `cleared the blacklist`") to event-channel
+		else:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
+
 
 on button click:
 	set {%id of event-guild%.queue::*} to queue of event-guild
@@ -623,6 +746,9 @@ discord command clear queue:
 	description: Clears the current queue.
 	executable in: guild
 	trigger:
+		if {%event-guild%.blockeddj::*} contains id of event-member:
+			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			exit
 		loop {%id of event-guild%.dj::*}:
 			if "%roles of event-member%" does not contain "%role with id loop-value%":
 				continue
@@ -741,7 +867,7 @@ discord command ping:
 		set {_unixtime2} to unix timestamp of now
 		destroy discord entity {_temp}
 		subtract {_unixtime} from {_unixtime2}
-		send "ping: %{_unixtime2}*1000%ms" to event-channel
+		send "ping: %{_unixtime2}*1000%ms%nl%websocket ping: %discord bot ping of event-bot%" to event-channel
 
 discord command boosterdj:
 	prefixes: ?
@@ -772,6 +898,47 @@ discord command boosterdj:
 			clear {%event-guild%.boostrole}
 			set {boosterdj} to false
 
+on message receive seen by "trollvibe":
+	set {_att::*} to attachments of event-message
+	if {_att::*} is not set:
+		exit
+	else:
+		set {%id of event-guild%.attachmentmessage} to event-message
+
+discord command caption <text>:
+	prefixes: ?
+	executable in: guild
+	category: general
+	usage: <text>
+	aliases: cap
+	description: Captions an image.
+	trigger:
+		if event-member has permission administrator:
+			set {_att::*} to attachments of event-message
+			if {_att::*} is none:
+				set {_att::*} to attachments of referencing message of event-message
+			if {att::*} is none:
+				set {_att::*} to attachments of {%id of event-guild%.attachmentmessage}
+			set {_url} to url of {_att::1}
+			set {_img} to image from url {_url}
+			set {_background} to new image with size 100, 100
+			set {_width} to width of {_img}
+			set {_height} to height of {_img}
+			set {_num} to {_width}/10
+			set {_text} to new font style with font name "Dialog" and with size {_num}
+			if {_width} > 2000:
+				set {_width} to {_width}/12
+				set {_height} to {_height}/12
+				set {_img} to resized {_img} to size {_width}, {_height} with algorithm 4
+			set {_imgtext} to new image with size {_width}, {_height}
+			draw arg-1 with font style {text} at {_width}, {_height}/9 with color from rgb 255, 255, 255 on {_imgtext} with align center
+			set {_imgtext} to resized {_imgtext} to size {_width}, {_height} with algorithm 4
+			draw image {_imgtext} on {_img} at 0, 0
+			upload {_img}  to event-channel
+			exit
+		else:
+			send createQuickEmbed("","❌ `Dev Command.`") to event-channel
+
 discord command todo [<text>]:
 	prefixes: ?
 	executable in: guild
@@ -779,15 +946,16 @@ discord command todo [<text>]:
 	usage: [<text/number>]
 	description: Shows you what needs to be done or adds something to that list.
 	trigger:
-		if arg-1 is not set:
-			send createQuickEmbed("","%{todo::*}%") to event-channel
-			exit
-		if arg-1 parsed as number is a number:
-			delete {todo::%arg-1%}
-			send createQuickEmbed("","✅ removed it from the list of to-dos!") to event-channel
-			exit
-		add "%nl%%arg-1%" to {todo::*}
-		send createQuickEmbed("","✅ added it to the list of to-dos!") to event-channel
+		if id of event-user is "568854670760476672":
+			if arg-1 is not set:
+				send createQuickEmbed("","%{todo::*}%") to event-channel
+				exit
+			if arg-1 parsed as number is a number:
+				delete {todo::%arg-1%}
+				send createQuickEmbed("","? removed it from the list of to-dos!") to event-channel
+				exit
+			add "%nl%%arg-1%" to {todo::*}
+			send createQuickEmbed("","? added it to the list of to-dos!") to event-channel
 
 command /uptime:
 	trigger:
@@ -805,7 +973,7 @@ discord command uptime:
 		send createQuickEmbed("","⏰  %{_uptime}%") to event-channel
 
 on load:
-	set presence of bot "trollvibe" to playing "!help"
+	set presence of bot "trollvibe" to playing "?help"
 
 command /start:
 	trigger:
@@ -816,4 +984,4 @@ command /start:
 		wait 1 second
 		execute console command "save-all"
 		send "Loaded up." to console
-		set presence of bot named "trollvibe" to playing "!help"
+		set presence of bot named "trollvibe" to playing "?help"
