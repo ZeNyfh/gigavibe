@@ -37,7 +37,7 @@ function toSeconds(timespan: timespan) :: number:
 	replace all "hours" and "hour" with "* 3600" in {_totaltime} # checks for plural to not end up with "1s * 3600" or something similar
 	replace all "minutes" and "minute" with "* 60" in {_totaltime}
 	replace all "seconds" and "second" with "" in {_totaltime}
-	replace all "and " and ", " with "+ s" in {_totaltime}
+	replace all "and " and ", " with "+ " in {_totaltime}
 	set {_totaltime} to evaluate expr "%{_totaltime}%"
 	return {_totaltime} # if used within a loop, be sure to add the result to a variable
 
@@ -384,7 +384,7 @@ on track start seen by "gigavibe":
 	wait 1 second
 	set {_current} to the track the bot is playing in the event-guild
 	if {_current} is not set:
-		send createQuickEmbed("**Error!**","❌ Skipped the track as it was age restricted.") to event-channel
+		send createQuickEmbed("**Error!**","❌ Skipped the track as it was age restricted.") to {%id of event-guild%.musicchannel}
 		exit
 	if {_a} is not set:
 		set {%id of event-guild%.queue::*} to queue of event-guild
@@ -404,6 +404,7 @@ on track start seen by "gigavibe":
 				add inline field named "**Duration:**" with value normalized track duration of the track the bot is playing in the event-guild to fields of embed
 				set description of embed to join {_l::*} with nl
 			send last embed to {%id of event-guild%.musicchannel}
+			exit
 
 on track end seen by "gigavibe":
 	set {%id of event-guild%.track::*} to queue of event-guild
@@ -431,14 +432,14 @@ discord command loop:
 	prefixes: !
 	trigger:
 		if {%event-guild%.blockeddj::*} contains id of event-member:
-			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+			send createQuickEmbed("","❌ Insufficient permissions.") to event-channel
 			exit
 		if bot is repeating in event-guild:
 			set repeating state of event-guild to no
-			send "no longer looping" to event-channel
+			send createQuickEmbed("❌ 🔁","No longer looping the current track.") to event-channel
 		else:
 			set repeating state of event-guild to yes
-			send "now looping" to event-channel
+			send createQuickEmbed("✅ 🔁","Looping the current track.") to event-channel
 
 discord command skip:
 	prefixes: !
@@ -1050,18 +1051,17 @@ discord command uptime:
 		set {_uptime} to uptime of bot named "gigavibe"
 		send createQuickEmbed("","⏰  %{_uptime}%") to event-channel
 
-every 10 minutes:
+every 2 minutes:
 	loop guilds of bot with name "gigavibe":
 		add 1 to {_num}
 	set presence of bot named "gigavibe" to playing "in %{_num}% servers | ?help"
 
 on load:
-	while "gigavibe" is not loaded in discord:
-		loop guilds of bot with name "gigavibe":
-			add 1 to {_num}
-		set presence of bot named "gigavibe" to playing "in %{_num}% servers | ?help"
-		wait 10 seconds
-		clear {_num}
+	loop guilds of bot with name "gigavibe":
+		add 1 to {_num}
+	set presence of bot named "gigavibe" to playing "in %{_num}% servers | ?help"
+	wait 10 seconds
+	clear {_num}
 
 command /start:
 	trigger:
