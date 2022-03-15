@@ -251,7 +251,7 @@ discord command play [<string>]:
 				clear {%id of event-guild%.ratelimit}
 				set {_current} to the track the bot is playing in the event-guild
 				make embed:
-					set {_thumbnail} to track thumbnail of track the bot is playing in the event-guild
+					set {_thumbnail} to track thumbnail of {_searchresult::1}
 					replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
 					set thumbnail of embed to {_thumbnail}
 					set title of embed to "%{_searchresult::1}%"
@@ -278,7 +278,7 @@ discord command play [<string>]:
 				set {_time} to "%{_time}% seconds" parsed as timespan
 				make embed:
 					set title of embed to "Added %size of {_searchresult::*}% tracks to the queue."
-					set {_thumbnail} to track thumbnail of track the bot is playing in the event-guild
+					set {_thumbnail} to track thumbnail of {_searchresult::1}
 					replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
 					set thumbnail of embed to {_thumbnail}
 					set title url of embed to arg-1
@@ -390,12 +390,12 @@ on track start seen by "gigavibe":
 		set {%id of event-guild%.queue::*} to queue of event-guild
 		set {_current} to the track the bot is playing in the event-guild
 		add {_curent} and {%id of event-guild%.queue::*} to {_%id of event-guild%.lengthcheck::*}
+		set {_thumbnail} to track thumbnail of track the bot is playing in the event-guild
+		replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
 		if size of {_%id of event-guild%.lengthcheck::*} < 1:
 			exit
 		else:
 			make embed:
-				set {_thumbnail} to track thumbnail of track the bot is playing in the event-guild
-				replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
 				set thumbnail of embed to {_thumbnail}
 				set color of embed to {@zencolour}
 				set title of embed to "**Now playing: %{_current}%**"
@@ -404,7 +404,6 @@ on track start seen by "gigavibe":
 				add inline field named "**Duration:**" with value normalized track duration of the track the bot is playing in the event-guild to fields of embed
 				set description of embed to join {_l::*} with nl
 			send last embed to {%id of event-guild%.musicchannel}
-			exit
 
 on track end seen by "gigavibe":
 	set {%id of event-guild%.track::*} to queue of event-guild
