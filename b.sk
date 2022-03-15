@@ -2,33 +2,34 @@ options:
 	gigacolour: skript color from hex "202225"
 	trollcolour: skript color from hex "dcdcdc"
 	zencolour: skript color from hex "202225"
+	longshit: "‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎  ‎ ‎  ‎ ‎  ‎ ‎  ‎ ‎  ‎ ‎  ‎ ‎ ‎  ‎ ‎ ‎  ‎ ‎ ‎  ‎  ‎ ‎ ‎  ‎  ‎ ‎ ‎  ‎ ‎  ‎ ‎ ‎  ‎ ‎  ‎ ‎ ‎  ‎  ‎ ‎ ‎  ‎ ‎  ‎‎ ‎‎‎‎"
 
 expression:
-    return type: text
-    patterns:
-        normal[ ]format from %timespan%
-        normalize[d] %timespan%
-    get:
-        set {_time} to (expr-1.getTicks()/20)
-        set {_d} to rounded down ((({_time}/60)/60)/24)
-        remove {_d}*60*60*24 from {_time}
-        set {_h} to rounded down ((({_time}/60)/60))
-        remove {_h}*60*60 from {_time}
-        set {_m} to rounded down ((({_time}/60)))
-        remove {_m}*60 from {_time}
-        set {_s} to rounded down ((({_time})))
-        loop "d", "h", "m" and "s":
-            {_%loop-value%} < 10:
-                set {_%loop-value%} to "0%{_%loop-value%}%"
-            {_%loop-value%} is not set:
-                set {_%loop-value%} to "00"
-            {_%loop-value%} is 0:
-                set {_%loop-value%} to "00"
-            add "%{_%loop-value%}%" to {_t::*}
-        loop 2 times:
-            first element out of {_t::*} is "00":
-                remove first element out of {_t::*} from {_t::*}
-        return join {_t::*} by ":"
+	return type: text
+	patterns:
+		normal[ ]format from %timespan%
+		normalize[d] %timespan%
+	get:
+		set {_time} to (expr-1.getTicks()/20)
+		set {_d} to rounded down ((({_time}/60)/60)/24)
+		remove {_d}*60*60*24 from {_time}
+		set {_h} to rounded down ((({_time}/60)/60))
+		remove {_h}*60*60 from {_time}
+		set {_m} to rounded down ((({_time}/60)))
+		remove {_m}*60 from {_time}
+		set {_s} to rounded down ((({_time})))
+		loop "d", "h", "m" and "s":
+			{_%loop-value%} < 10:
+				set {_%loop-value%} to "0%{_%loop-value%}%"
+			{_%loop-value%} is not set:
+				set {_%loop-value%} to "00"
+			{_%loop-value%} is 0:
+				set {_%loop-value%} to "00"
+			add "%{_%loop-value%}%" to {_t::*}
+		loop 2 times:
+			first element out of {_t::*} is "00":
+				remove first element out of {_t::*} from {_t::*}
+		return join {_t::*} by ":"
 
 function toSeconds(timespan: timespan) :: number:
 	set {_totaltime} to {_timespan}
@@ -37,7 +38,7 @@ function toSeconds(timespan: timespan) :: number:
 	replace all "hours" and "hour" with "* 3600" in {_totaltime} # checks for plural to not end up with "1s * 3600" or something similar
 	replace all "minutes" and "minute" with "* 60" in {_totaltime}
 	replace all "seconds" and "second" with "" in {_totaltime}
-	replace all "and " and ", " with "+ " in {_totaltime}
+	replace all "and " and ", " with "+ s" in {_totaltime}
 	set {_totaltime} to evaluate expr "%{_totaltime}%"
 	return {_totaltime} # if used within a loop, be sure to add the result to a variable
 
@@ -79,6 +80,10 @@ function helpMessage(string: string, u: user, g: guild) :: embedbuilder:
 			else:
 				set {_categories::*} to category of loop-value
 	return last embed
+
+function randomiseAttack(list: objects) :: object:
+	set {_random} to a random integer between 1 and size of {_list::*}
+	return {_list::%{_random}%}
 
 import:
 	ch.njol.skript.log.SkriptLogger
@@ -175,7 +180,9 @@ discord command soundcloud [<string>]:
 			send createQuickEmbed("","❌ `You need to be in a voice channel to use this command.`") to event-channel
 			exit
 		if {%id of event-guild%.blockedchannels::*} contains discord id of event-channel:
-			send createQuickEmbed("","❌ `You cant use this command in this channel.`") to event-channel
+			loop {%id of event-guild%.blockedchannels::*}:
+				add "%channel with id loop-value%" to {_blockedchannellist::*}
+			send createQuickEmbed("","❌ `You can use this command anywhere apart from %{_blockedchannellist::*}%`") to event-channel
 			clear {%id of event-guild%.ratelimit}
 			exit
 		connect event-bot to voice channel of event-member
@@ -227,7 +234,9 @@ discord command play [<string>]:
 			clear {%id of event-guild%.ratelimit}
 			exit
 		if {%id of event-guild%.blockedchannels::*} contains discord id of event-channel:
-			send createQuickEmbed("","❌ `You cant use this command in this channel.`") to event-channel
+			loop {%id of event-guild%.blockedchannels::*}:
+				add "%channel with id loop-value%" to {_blockedchannellist::*}
+			send createQuickEmbed("","❌ `You can use this command anywhere apart from %{_blockedchannellist::*}%`") to event-channel
 			clear {%id of event-guild%.ratelimit}
 			exit
 		set {playcheck} to true
@@ -379,18 +388,27 @@ on track start seen by "gigavibe":
 	set {unixtime} to unix timestamp of now
 	wait 1 second
 	set {_current} to the track the bot is playing in the event-guild
+	if {_current} is not set:
+		send createQuickEmbed("**Error!**","❌ Skipped the track as it was age restricted.") to event-channel
+		exit
 	if {_a} is not set:
-		make embed:
-			set {_thumbnail} to track thumbnail of track the bot is playing in the event-guild
-			replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
-			set thumbnail of embed to {_thumbnail}
-			set color of embed to {@zencolour}
-			set title of embed to "**Now playing: %{_current}%**"
-			add "**Channel:**%nl%%track author of {_current}%%nl%" to {_l::*}
-			set title url of embed to "%track url of {_current}%"
-			add inline field named "**Duration:**" with value normalized track duration of the track the bot is playing in the event-guild to fields of embed
-			set description of embed to join {_l::*} with nl
-		send last embed to {%id of event-guild%.musicchannel}
+		set {%id of event-guild%.queue::*} to queue of event-guild
+		set {_current} to the track the bot is playing in the event-guild
+		add {_curent} and {%id of event-guild%.queue::*} to {_%id of event-guild%.lengthcheck::*}
+		if size of {_%id of event-guild%.lengthcheck::*} < 1:
+			exit
+		else:
+			make embed:
+				set {_thumbnail} to track thumbnail of track the bot is playing in the event-guild
+				replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
+				set thumbnail of embed to {_thumbnail}
+				set color of embed to {@zencolour}
+				set title of embed to "**Now playing: %{_current}%**"
+				add "**Channel:**%nl%%track author of {_current}%%nl%" to {_l::*}
+				set title url of embed to "%track url of {_current}%"
+				add inline field named "**Duration:**" with value normalized track duration of the track the bot is playing in the event-guild to fields of embed
+				set description of embed to join {_l::*} with nl
+			send last embed to {%id of event-guild%.musicchannel}
 
 on track end seen by "gigavibe":
 	set {%id of event-guild%.track::*} to queue of event-guild
@@ -536,27 +554,79 @@ discord command forceskip:
 		send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
 		exit
 
+discord command setlog <channel>:
+	prefixes: !
+	aliases: logchannel, logs, log
+	description: Sets the logging channel in the server
+	category: admin
+	executable in: guild
+	usage: <channel>
+	trigger:
+		if event-member has permission administrator:
+			if {%id of event-guild%.logchannel} is not set:
+				send createQuickEmbed("","✅ Set the log channel to %arg-1%") to event-channel
+			else:
+				send createQuickEmbed("","✅ Set the log channel to %arg-1% and overwrote %channel with id {%id of event-guild%.logchannel}%") to event-channel
+			set {%id of event-guild%.logchannel} to discord id of arg-1
+		else:
+			send createQuickEmbed("","❌ Insufficient permissions.") to event-channel
+
+discord command deleteinvite:
+	aliases: invitelog
+	prefixes: !
+	executable in: guild
+	category: admin 
+	description: Logs discord invites and removes them.
+	trigger:
+		if event-member has permission administrator:
+			if {%id of event-guild%.deleteinvite} is not set:
+				set {%id of event-guild%.deleteinvite} to true
+				send createQuickEmbed("","✅ Invite auto-deletion and logging is now **enabled**") to event-channel
+				exit
+			if {%id of event-guild%.deleteinvite} is true:
+				set {%id of event-guild%.deleteinvite} to false
+				send createQuickEmbed("","✅ Invite auto-deletion and logging is now **disabled**") to event-channel
+				exit
+
+on message receive seen by "gigavibe":
+	if "%event-message%" contains "discord.gg/":
+		if "%event-message%" does not contain "gift":
+			if event-member is not a discord bot:
+				if event-member does not have permission message manage:
+					if {%id of event-guild%.deleteinvite} is true:
+						send createQuickEmbed("**Advertisement log**","User %event-user%##%discriminator of event-user% (%id of event-user%) sent a discord invite in ##%event-channel%") to channel with id {%id of event-guild%.logchannel}
+						destroy event-message
+						send createQuickEmbed("","❌ Don't advertise here.") to event-channel
+
 discord command reload:
 	prefixes: !
 	category: admin
 	description: Reloads the bot code
 	executable in: guild
 	trigger:
-		if id of event-member is "568854670760476672":
+		if id of event-member is "211789389401948160" or "211789389401948160":
 			execute console command "skript reload b"
 			reply with "reloaded the bot."
 			exit
 		send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+
+discord command say <channel> <text>:
+	prefixes: !
+	description: says something anonymously
+	category: admin
+	trigger:
+		if event-member has permission message manage:
+			send "%arg-2%" to arg-1
 
 discord command exec <text>:
 	prefixes: !
 	description: Executes some skript code.
 	category: admin
 	trigger:
-		if id of event-member is "568854670760476672" or "260016427900076033":
+		if id of event-member is "211789389401948160" or "260016427900076033" or "211789389401948160":
 			eval arg-1 and store the errors in {_errors}
 		else:
-			if id of event-user is "568854670760476672" or "260016427900076033":
+			if id of event-user is "211789389401948160" or "260016427900076033":
 				reply with "Only the owner can use exec"
 		if {_errors} is set:
 			reply with "Error: %nl%```%{_errors}%```" # i am using reply here so that i can execute code in dms as well.
@@ -582,11 +652,11 @@ discord command np:
 		set {totaltime} to toSeconds(track duration of track bot is playing in event-guild)
 		set {tracktime} to toSeconds(track position of track event-bot is playing in event-guild)
 		#set {_timeleft} to {totaltime} - {tracktime}
-		set {_location} to 30-round( ({totaltime}-{tracktime})/{totaltime} * 30)
+		set {_location} to 20-round( ({totaltime}-{tracktime})/{totaltime} * 20)
 		if {_location} < 0:
 			send "**an error has occurred**, location is less than 0 on this track. Report this here: https://www.github.com/ZeNyfh/gigavibe/issues" to event-channel
 			exit
-		set {_line} to "0━1━2━3━4━5━6━7━8━9━10━11━12━13━14━15━16━17━18━19━20━21━22━23━24━25━26━27━28━29━30"
+		set {_line} to "0━1━2━3━4━5━6━7━8━9━10━11━12━13━14━15━16━17━18━19━20"
 		set {_linesplit::*} to {_line} split at "%{_location}%"
 		set {_line} to "%{_linesplit::1}%🔘%{_linesplit::2}%"
 		clear {_linesplit::1} and {_linesplit::2}
@@ -902,8 +972,6 @@ on message receive seen by "gigavibe":
 	set {_att::*} to attachments of event-message
 	if {_att::*} is not set:
 		exit
-	else:
-		set {%id of event-guild%.attachmentmessage} to event-message
 
 discord command caption <text>:
 	prefixes: !
@@ -961,7 +1029,7 @@ discord command todo [<text>]:
 	usage: [<text/number>]
 	description: Shows you what needs to be done or adds something to that list.
 	trigger:
-		if id of event-user is "568854670760476672":
+		if id of event-user is "211789389401948160":
 			if arg-1 is not set:
 				send createQuickEmbed("","%{todo::*}%") to event-channel
 				exit

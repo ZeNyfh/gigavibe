@@ -89,7 +89,7 @@ discord command reload:
 	description: Reloads the bot code
 	executable in: guild
 	trigger:
-		if id of event-member is "568854670760476672":
+		if id of event-member is "211789389401948160" or "211789389401948160":
 			execute console command "skript reload trollvibe"
 			reply with "reloaded the bot."
 			exit
@@ -187,7 +187,10 @@ discord command soundcloud [<string>]:
 			send createQuickEmbed("","❌ `You need to be in a voice channel to use this command.`") to event-channel
 			exit
 		if {%id of event-guild%.blockedchannels::*} contains discord id of event-channel:
-			send createQuickEmbed("","❌ `You cant use this command in this channel.`") to event-channel
+			loop {%id of event-guild%.blockedchannels::*}:
+				add "%channel with id loop-value%" to {_blockedchannellist::*}
+			send createQuickEmbed("","❌ `You can use this command anywhere apart from %{_blockedchannellist::*}%`") to event-channel
+			clear {%id of event-guild%.ratelimit}
 			exit
 		connect event-bot to voice channel of event-member
 		search in soundcloud for arg-1 and store it in {_searchresult::*}
@@ -239,7 +242,9 @@ discord command play [<string>]:
 			clear {%id of event-guild%.ratelimit}
 			exit
 		if {%id of event-guild%.blockedchannels::*} contains discord id of event-channel:
-			send createQuickEmbed("","❌ `You cant use this command in this channel.`") to event-channel
+			loop {%id of event-guild%.blockedchannels::*}:
+				add "%channel with id loop-value%" to {_blockedchannellist::*}
+			send createQuickEmbed("","❌ `You can use this command anywhere apart from %{_blockedchannellist::*}%`") to event-channel
 			clear {%id of event-guild%.ratelimit}
 			exit
 		set {playcheck} to true
@@ -391,18 +396,27 @@ on track start seen by "trollvibe":
 	set {unixtime} to unix timestamp of now
 	wait 1 second
 	set {_current} to the track the bot is playing in the event-guild
+	if {_current} is not set:
+		send createQuickEmbed("**Error!**","❌ Skipped the track as it was age restricted.") to event-channel
+		exit
 	if {_a} is not set:
-		make embed:
-			set {_thumbnail} to track thumbnail of track the bot is playing in the event-guild
-			replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
-			set thumbnail of embed to {_thumbnail}
-			set color of embed to {@zencolour}
-			set title of embed to "**Now playing: %{_current}%**"
-			add "**Channel:**%nl%%track author of {_current}%%nl%" to {_l::*}
-			set title url of embed to "%track url of {_current}%"
-			add inline field named "**Duration:**" with value normalized track duration of the track the bot is playing in the event-guild to fields of embed
-			set description of embed to join {_l::*} with nl
-		send last embed to {%id of event-guild%.musicchannel}
+		set {%id of event-guild%.queue::*} to queue of event-guild
+		set {_current} to the track the bot is playing in the event-guild
+		add {_curent} and {%id of event-guild%.queue::*} to {_%id of event-guild%.lengthcheck::*}
+		if size of {_%id of event-guild%.lengthcheck::*} < 1:
+			exit
+		else:
+			make embed:
+				set {_thumbnail} to track thumbnail of track the bot is playing in the event-guild
+				replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
+				set thumbnail of embed to {_thumbnail}
+				set color of embed to {@zencolour}
+				set title of embed to "**Now playing: %{_current}%**"
+				add "**Channel:**%nl%%track author of {_current}%%nl%" to {_l::*}
+				set title url of embed to "%track url of {_current}%"
+				add inline field named "**Duration:**" with value normalized track duration of the track the bot is playing in the event-guild to fields of embed
+				set description of embed to join {_l::*} with nl
+			send last embed to {%id of event-guild%.musicchannel}
 
 on track end seen by "trollvibe":
 	set {%id of event-guild%.track::*} to queue of event-guild
@@ -548,15 +562,23 @@ discord command forceskip:
 		send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
 		exit
 
+discord command say <channel> <text>:
+	prefixes: ?
+	description: says something anonymously
+	category: admin
+	trigger:
+		if event-member has permission message manage:
+			send "%arg-2%" to arg-1
+
 discord command exec <text>:
 	prefixes: ?
 	description: Executes some skript code.
 	category: admin
 	trigger:
-		if id of event-member is "568854670760476672" or "260016427900076033":
+		if id of event-member is "211789389401948160" or "260016427900076033" or "211789389401948160":
 			eval arg-1 and store the errors in {_errors}
 		else:
-			if id of event-user is "568854670760476672" or "260016427900076033":
+			if id of event-user is "211789389401948160" or "260016427900076033" or "211789389401948160":
 				reply with "Only the owner can use exec"
 		if {_errors} is set:
 			reply with "Error: %nl%```%{_errors}%```" # i am using reply here so that i can execute code in dms as well.
@@ -582,11 +604,11 @@ discord command np:
 		set {totaltime} to toSeconds(track duration of track bot is playing in event-guild)
 		set {tracktime} to toSeconds(track position of track event-bot is playing in event-guild)
 		#set {_timeleft} to {totaltime} - {tracktime}
-		set {_location} to 30-round( ({totaltime}-{tracktime})/{totaltime} * 30)
+		set {_location} to 20-round( ({totaltime}-{tracktime})/{totaltime} * 20)
 		if {_location} < 0:
-			send "**an error has occurred**, location is less than 0 on this track. Report this here: https://www.github.com/ZeNyfh/trollvibe/issues" to event-channel
+			send "**an error has occurred**, location is less than 0 on this track. Report this here: https://www.github.com/ZeNyfh/gigavibe/issues" to event-channel
 			exit
-		set {_line} to "0━1━2━3━4━5━6━7━8━9━10━11━12━13━14━15━16━17━18━19━20━21━22━23━24━25━26━27━28━29━30"
+		set {_line} to "0━1━2━3━4━5━6━7━8━9━10━11━12━13━14━15━16━17━18━19━20"
 		set {_linesplit::*} to {_line} split at "%{_location}%"
 		set {_line} to "%{_linesplit::1}%🔘%{_linesplit::2}%"
 		clear {_linesplit::1} and {_linesplit::2}
@@ -629,7 +651,7 @@ discord command github:
 			set color of embed to {@zencolour}
 			add "❕ `Use this for bug reports and feature requests ONLY`%nl%" to {_a::*}
 			add "❕ `When making an issue, make sure to specify which bot has the bug (trollvibe or trollvibe)`%nl%" to {_a::*}
-			add "https://github.com/ZeNyfh/trollvibe/issues" to {_a::*}
+			add "https://github.com/ZeNyfh/gigavibe/issues" to {_a::*}
 			set description of embed to join {_a::*} with nl
 		send last embed to event-channel
 
@@ -946,7 +968,7 @@ discord command todo [<text>]:
 	usage: [<text/number>]
 	description: Shows you what needs to be done or adds something to that list.
 	trigger:
-		if id of event-user is "568854670760476672":
+		if id of event-user is "211789389401948160":
 			if arg-1 is not set:
 				send createQuickEmbed("","%{todo::*}%") to event-channel
 				exit
