@@ -994,8 +994,18 @@ discord command uptime:
 		set {_uptime} to uptime of bot named "trollvibe"
 		send createQuickEmbed("","⏰  %{_uptime}%") to event-channel
 
+every 10 minutes:
+	loop guilds of bot with name "trollvibe":
+		add 1 to {_num}
+	set presence of bot named "trollvibe" to playing "music in %{_num}% servers | ?help"
+
 on load:
-	set presence of bot "trollvibe" to playing "?help"
+	while "trollvibe" is not loaded in discord:
+		loop guilds of bot with name "trollvibe":
+			add 1 to {_num}
+		set presence of bot named "trollvibe" to playing "music in %{_num}% servers | ?help"
+		wait 10 seconds
+		clear {_num}
 
 command /start:
 	trigger:

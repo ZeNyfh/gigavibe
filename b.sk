@@ -2,7 +2,6 @@ options:
 	gigacolour: skript color from hex "202225"
 	trollcolour: skript color from hex "dcdcdc"
 	zencolour: skript color from hex "202225"
-	longshit: "‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎ ‎  ‎ ‎  ‎ ‎  ‎ ‎  ‎ ‎  ‎ ‎  ‎ ‎ ‎  ‎ ‎ ‎  ‎ ‎ ‎  ‎  ‎ ‎ ‎  ‎  ‎ ‎ ‎  ‎ ‎  ‎ ‎ ‎  ‎ ‎  ‎ ‎ ‎  ‎  ‎ ‎ ‎  ‎ ‎  ‎‎ ‎‎‎‎"
 
 expression:
 	return type: text
@@ -1051,8 +1050,18 @@ discord command uptime:
 		set {_uptime} to uptime of bot named "gigavibe"
 		send createQuickEmbed("","⏰  %{_uptime}%") to event-channel
 
+every 10 minutes:
+	loop guilds of bot with name "gigavibe":
+		add 1 to {_num}
+	set presence of bot named "gigavibe" to playing "in %{_num}% servers | ?help"
+
 on load:
-	set presence of bot "gigavibe" to playing "!help"
+	while "gigavibe" is not loaded in discord:
+		loop guilds of bot with name "gigavibe":
+			add 1 to {_num}
+		set presence of bot named "gigavibe" to playing "in %{_num}% servers | ?help"
+		wait 10 seconds
+		clear {_num}
 
 command /start:
 	trigger:
@@ -1063,3 +1072,4 @@ command /start:
 		wait 1 second
 		execute console command "save-all"
 		send "Loaded up." to console
+		set presence of bot named "gigavibe" to playing "?help"
