@@ -81,10 +81,6 @@ function helpMessage(string: string, u: user, g: guild) :: embedbuilder:
 				set {_categories::*} to category of loop-value
 	return last embed
 
-function randomiseAttack(list: objects) :: object:
-	set {_random} to a random integer between 1 and size of {_list::*}
-	return {_list::%{_random}%}
-
 import:
 	ch.njol.skript.log.SkriptLogger
 
