@@ -115,6 +115,7 @@ discord command help [<string>]:
 			if "admin" contains discord command category of loop-value:
 				add "`%loop-value%`" to {_admin::*}
 				replace every "and " and "," in {_admin::*} with "" 
+		replace every "clear" in {_dj::*} with "clear queue"
 		make embed:
 			set title of embed to "📔 `Commands`"
 			add "Click the buttons to get more information on a group.%nl%" to {_l::*}
@@ -247,6 +248,10 @@ discord command play [<string>]:
 			send createQuickEmbed("","❌ `You can use this command anywhere apart from %{_blockedchannellist::*}%`") to event-channel
 			clear {%id of event-guild%.ratelimit}
 			exit
+		if arg-1 contains "media.discordapp.net" or "cdn.discordapp.com":
+			send createQuickEmbed("","❌ You need to specify a URL or a Youtube search term.") to event-channel
+			clear {%id of event-guild%.ratelimit}
+			exit
 		set {playcheck} to true
 		connect event-bot to voice channel of event-member
 		if arg-1 contains "http" or "https":
@@ -264,7 +269,7 @@ discord command play [<string>]:
 				clear {%id of event-guild%.ratelimit}
 				set {_current} to the track the bot is playing in the event-guild
 				make embed:
-					set {_thumbnail} to track thumbnail of track the bot is playing in the event-guild
+					set {_thumbnail} to track thumbnail of {_searchresult::1}
 					replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
 					set thumbnail of embed to {_thumbnail}
 					set title of embed to "%{_searchresult::1}%"
@@ -291,7 +296,7 @@ discord command play [<string>]:
 				set {_time} to "%{_time}% seconds" parsed as timespan
 				make embed:
 					set title of embed to "Added %size of {_searchresult::*}% tracks to the queue."
-					set {_thumbnail} to track thumbnail of track the bot is playing in the event-guild
+					set {_thumbnail} to track thumbnail of {_searchresult::1}
 					replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
 					set thumbnail of embed to {_thumbnail}
 					set title url of embed to arg-1
@@ -393,31 +398,30 @@ on track start seen by "trollvibe":
 	clear {aaa}
 	if repeating state of event-guild is yes:
 		set {_a} to true
-	set {unixtime} to unix timestamp of now
+	set {trackcurrent} to the track the bot is playing in the event-guild
 	wait 1 second
-	set {_current} to the track the bot is playing in the event-guild
-	if {_current} is not set:
-		send createQuickEmbed("**Error!**","❌ Skipped the track as it was age restricted.") to {%id of event-guild%.musicchannel}
+	if {trackcurrent} is not set:
+		send createQuickEmbed("**Error!**","❌ `Skipped the track as it was age restricted.`") to {%id of event-guild%.musicchannel}
+		clear {trackcurrent}
 		exit
 	if {_a} is not set:
 		set {%id of event-guild%.queue::*} to queue of event-guild
 		set {_current} to the track the bot is playing in the event-guild
 		add {_curent} and {%id of event-guild%.queue::*} to {_%id of event-guild%.lengthcheck::*}
+		set {_thumbnail} to track thumbnail of track the bot is playing in the event-guild
+		replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
 		if size of {_%id of event-guild%.lengthcheck::*} < 1:
 			exit
-		else:
-			make embed:
-				set {_thumbnail} to track thumbnail of track the bot is playing in the event-guild
-				replace every "maxresdefault.jpg" in {_thumbnail} with "0.jpg"
-				set thumbnail of embed to {_thumbnail}
-				set color of embed to {@zencolour}
-				set title of embed to "**Now playing: %{_current}%**"
-				add "**Channel:**%nl%%track author of {_current}%%nl%" to {_l::*}
-				set title url of embed to "%track url of {_current}%"
-				add inline field named "**Duration:**" with value normalized track duration of the track the bot is playing in the event-guild to fields of embed
-				set description of embed to join {_l::*} with nl
-			send last embed to {%id of event-guild%.musicchannel}
-			exit
+		make embed:
+			set thumbnail of embed to {_thumbnail}
+			set color of embed to {@zencolour}
+			set title of embed to "**Now playing: %{_current}%**"
+			add "**Channel:**%nl%%track author of {_current}%%nl%" to {_l::*}
+			set title url of embed to "%track url of {_current}%"
+			add inline field named "**Duration:**" with value normalized track duration of the track the bot is playing in the event-guild to fields of embed
+			set description of embed to join {_l::*} with nl
+		send last embed to {%id of event-guild%.musicchannel}
+		exit
 
 on track end seen by "trollvibe":
 	set {%id of event-guild%.track::*} to queue of event-guild
@@ -524,6 +528,7 @@ discord command disconnect:
 		if {%event-guild%.blockeddj::*} contains id of event-member:
 			send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
 			exit
+		set {trackcurrent} to "temp"
 		loop {%id of event-guild%.dj::*}:
 			if event-member has role with id loop-value or {%event-guild%.boostrole}:
 				stop queue of event-guild
@@ -534,7 +539,10 @@ discord command disconnect:
 				send createQuickEmbed("", "📭 `Successfully disconnected.`") to event-channel
 				exit
 		send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
+		wait 1 second
+		clear {trackcurrent}
 		exit
+
 
 discord command forceskip:
 	description: Skips the current song.
@@ -786,6 +794,103 @@ discord command clear queue:
 				exit
 		send createQuickEmbed("","❌ `Insufficient permissions.`") to event-channel
 
+discord command download <text>:
+	prefixes: ?
+	aliases: dl, ytdl
+	category: general
+	usage: <track url>
+	description: Downloads and sends the mp3 of a video from most sites
+	executable in: guild
+	trigger:
+		set {_track} to arg-1
+		set {num.%id of event-message%} to id of event-message
+		if arg-1 is set:
+			if "%arg-1%" contains "spotify":
+				send createQuickEmbed("","❌ `Spotify is not supported.`") to event-channel
+				exit
+			if arg-1 contains "youtu.be":
+				replace every "youtu.be/" with "youtube.com/watch?v=" in {_track}
+			if arg-1 contains "youtube.com":
+				replace every "&" with "##" in {_track}
+				if arg-1 contains "shorts/":
+					replace every "shorts/" with "watch?v=" in {_track}
+			send typing in the event-channel using the bot "trollvibe"
+			if the discord boost amount of event-guild is greater than or equal to 7:
+				set line 1 in file "plugins/ytdl.sh" to "yt-dlp -o ""%{num.%id of event-message%}%.%%(ext)s"" %{_track}% -f ""[filesize<50m]"" -x --audio-format mp3"
+			else:
+				set line 1 in file "plugins/ytdl.sh" to "yt-dlp -o ""%{num.%id of event-message%}%.%%(ext)s"" %{_track}% -f ""b"" -S ""filesize~8m"" -x --audio-format mp3"
+			wait 0.5 seconds
+			start file path "plugins/ytdl.sh"
+			loop 120 times: # 10 minutes
+				wait 5 seconds
+				send typing in the event-channel using the bot "trollvibe"
+				if file "%{num.%id of event-message%}%.mp3" exists:
+					wait 2 seconds
+					upload "%{num.%id of event-message%}%.mp3" with name "FILE.mp3" with the content "<@!%id of event-member%>" to event-channel
+					wait 5 seconds
+					delete file "%{num.%id of event-message%}%.mp3"
+					delete file "%{num.%id of event-message%}%.mp4"
+					clear {num.%id of event-message%}
+				else if file "%{num.%id of event-message%}%.m4a" exists:
+					upload "%{num.%id of event-message%}%.m4a" with name "FILE.m4a" with the content "<@!%id of event-member%>" to event-channel
+					wait 5 seconds
+					delete file "%{num.%id of event-message%}%.m4a"
+					delete file "%{num.%id of event-message%}%.mp4"
+					clear {num.%id of event-message%}
+					exit
+				else:
+					continue
+			send createQuickEmbed("","❌ `Timed out, the track took too long to download`") to event-channel and store it in {_a}
+			wait 10 seconds
+			destroy {_a}
+			exit
+		else:
+			send createQuickEmbed("","❌ `No argument was given.`") to event-channel
+			exit
+
+discord command videodl <text>:
+	prefixes: ?
+	aliases: dlv, ytdlv, downloadvideo, downloadv
+	category: general
+	usage: <video url/search term>
+	description: Downloads and sends the mp4 of a video from most sites (I recommend using this in a server with 50mb file upload limit)
+	trigger:
+		set {_track} to arg-1
+		set {num.%id of event-message%} to id of event-message
+		if arg-1 is set:
+			if "%arg-1%" contains "spotify":
+				send createQuickEmbed("","❌ `Spotify is not supported.`") to event-channel
+				exit
+			if arg-1 contains "youtu.be":
+				replace every "youtu.be/" with "youtube.com/watch?v=" in {_track}
+			if arg-1 contains "youtube.com":
+				replace every "&" with "##" in {_track}
+				if arg-1 contains "shorts/":
+					replace every "shorts/" with "watch?v=" in {_track}
+			send typing in the event-channel using the bot "trollvibe"
+			if the discord boost amount of event-guild is greater than or equal to 7:
+				set line 1 in file "plugins/ytdl.sh" to "yt-dlp -o ""%{num.%id of event-message%}%.%%(ext)s"" %{_track}% -f ""b"" -S ""filesize~50m"" --no-playlist"
+			else:
+				set line 1 in file "plugins/ytdl.sh" to "yt-dlp -o ""%{num.%id of event-message%}%.%%(ext)s"" %{_track}% -f ""b"" -S ""filesize~8m"" --no-playlist"
+			wait 0.5 seconds
+			start file path "plugins/ytdl.sh"
+			loop 120 times: # 10 minutes
+				wait 5 seconds
+				send typing in the event-channel using the bot "trollvibe"
+				if file "%{num.%id of event-message%}%.mp4" exists:
+					wait 10 seconds
+					upload "%{num.%id of event-message%}%.mp4" with name "FILE.mp4" with the content "<@!%id of event-member%>" to event-channel
+					wait 5 seconds
+					delete file "%{num.%id of event-message%}%.mp4"
+					clear {num.%id of event-message%}
+					exit
+				else:
+					continue
+			send createQuickEmbed("","❌ `Timed out, the track took too long to download or the requested format is not available. (File is possibly over 8mb and has no download options for it.)`") to event-channel
+			exit
+		else:
+			send createQuickEmbed("","❌ `No argument was given.`") to event-channel
+			exit
 
 discord command queue [<number>]:
 	prefixes: ?
@@ -876,8 +981,10 @@ on voice leave:
 		set {_members::*} to audio members of voice channel of {_sm}
 		if OR(check [size of {_members::*} = 1], check [{_members::1} is not set]) = true:
 			disconnect bot of event-guild
+			set repeating state of event-guild to no
 	else:
 		stop current queue of event-guild
+		set repeating state of event-guild to no
 
 discord command ping:
 	prefixes: ?
@@ -998,7 +1105,7 @@ discord command uptime:
 every 2 minutes:
 	loop guilds of bot with name "trollvibe":
 		add 1 to {_num}
-	set presence of bot named "trollvibe" to playing "music in %{_num}% servers | ?help"
+	set presence of bot named "trollvibe" to playing "in %{_num}% servers | ?help"
 
 on load:
 	loop guilds of bot with name "trollvibe":
@@ -1016,4 +1123,6 @@ command /start:
 		wait 1 second
 		execute console command "save-all"
 		send "Loaded up." to console
-		set presence of bot named "trollvibe" to playing "?help"
+		loop guilds of bot with name "trollvibe":
+			add 1 to {_num}
+		set presence of bot named "trollvibe" to playing "in %{_num}% servers | ?help"
